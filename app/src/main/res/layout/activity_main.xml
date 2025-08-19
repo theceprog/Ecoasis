@@ -182,7 +182,6 @@
                                     android:textFontWeight="1000" />
 
 
-
                             </TableRow>
 
                             <TableRow>
@@ -212,13 +211,13 @@
                                     android:textStyle="italic" />
 
 
-
                             </TableRow>
 
 
                         </TableLayout>
 
                     </androidx.cardview.widget.CardView>
+
                     <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -259,7 +258,6 @@
                                     android:textFontWeight="1000" />
 
 
-
                             </TableRow>
 
                             <TableRow>
@@ -295,6 +293,7 @@
                         </TableLayout>
 
                     </androidx.cardview.widget.CardView>
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -533,9 +532,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/frame2">
-<TableRow>
 
-</TableRow>
+            <TableRow>
+
+            </TableRow>
+
             <TableRow>
 
             </TableRow>
