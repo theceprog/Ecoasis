@@ -4,5 +4,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bg_card_outer">#fff</color>
     <color name="bg_card_inner">#ddd</color>
-
+    <color name="themegreen">#059669</color>
 </resources>

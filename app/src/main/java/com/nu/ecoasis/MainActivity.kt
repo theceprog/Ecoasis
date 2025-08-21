@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateButtonStates() {
         val isNightMode = isNightModeEnabled()
-
+        findViewById<ImageButton>(R.id.settingbtn).isActivated = isNightMode
         findViewById<ImageButton>(R.id.up_pump).isActivated = isNightMode
         findViewById<ImageButton>(R.id.down_pump).isActivated = isNightMode
     }

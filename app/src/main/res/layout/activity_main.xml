@@ -16,51 +16,89 @@
 
         <!-- App Name (TextView) -->
 
-
-        <LinearLayout
+        <TableLayout
             android:id="@+id/linearLayout"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="28dp"
-            android:gravity="center"
-            android:orientation="horizontal"
+            android:stretchColumns="*"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="10dp">
 
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="10dp"
-                app:srcCompat="@drawable/ic_seedling_solid" />
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@+font/montserrat_font"
-                android:text="@string/app_name"
-                android:textFontWeight="1000"
-                android:textSize="18sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center">
 
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_font"
+                        android:text="Cal."
+                        android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="@+font/montserrat_font"
-            android:text="By LingkodTech"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/imageView"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginEnd="10dp"
+                            app:srcCompat="@drawable/ic_seedling_solid" />
+
+                        <TextView
+                            android:id="@+id/textView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@+font/montserrat_font"
+                            android:text="@string/app_name"
+                            android:textFontWeight="1000"
+                            android:textSize="18sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@+font/montserrat_font"
+                        android:text="By LingkodTech"
+                        android:textAlignment="center"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/settingbtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#00ffffff"
+                    android:src="@drawable/setting_select" />
+            </TableRow>
+        </TableLayout>
+
 
         <ImageView
             android:id="@+id/imageView2"
@@ -69,7 +107,7 @@
             android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView2"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
             app:srcCompat="@drawable/ic_seedling_line" />
 
         <TextView
@@ -732,21 +770,23 @@
                     app:cardBackgroundColor="@color/bg_card_inner"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="5dp">
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textAlignment="center"
                         android:layout_marginVertical="10dp"
                         android:fontFamily="@font/digital"
-                        android:textSize="24sp"
+                        android:text="- - -"
+                        android:textAlignment="center"
                         android:textFontWeight="1000"
-                        android:text="- - -"/>
+                        android:textSize="24sp" />
                 </androidx.cardview.widget.CardView>
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="10dp">
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
 
                     <ImageView
                         android:layout_width="16dp"
@@ -764,6 +804,7 @@
                         android:textSize="12sp" />
 
                 </LinearLayout>
+
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -772,60 +813,70 @@
                     app:cardBackgroundColor="@color/bg_card_inner"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="5dp">
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textAlignment="center"
                         android:layout_marginVertical="10dp"
                         android:fontFamily="@font/digital"
-                        android:textSize="24sp"
+                        android:text="- - -"
+                        android:textAlignment="center"
                         android:textFontWeight="1000"
-                        android:text="- - -"/>
+                        android:textSize="24sp" />
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <androidx.cardview.widget.CardView
+        <FrameLayout
 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
-            app:cardBackgroundColor="@color/bg_card_outer"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="5dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/phppm">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="5dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@color/bg_card_outer"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="5dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/phppm">
 
-
-                <ImageView
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:layout_marginEnd="5dp"
-                    app:srcCompat="@drawable/setting_green" />
-
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@+font/montserrat_font"
-                    android:text="User Settings"
-                    android:textColor="#059669"
-                    android:textFontWeight="700"
-                    android:textSize="12sp" />
+                    android:layout_gravity="center"
+                    android:layout_margin="5dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
 
-            </LinearLayout>
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="5dp"
+                        app:srcCompat="@drawable/setting_green" />
 
-        </androidx.cardview.widget.CardView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@+font/montserrat_font"
+                        android:text="User Settings"
+                        android:textColor="#059669"
+                        android:textFontWeight="700"
+                        android:textSize="12sp" />
+
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+        </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
