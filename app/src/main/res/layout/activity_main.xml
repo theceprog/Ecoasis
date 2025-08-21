@@ -12,7 +12,7 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="16dp">
+        android:paddingBottom="20dp">
 
         <!-- App Name (TextView) -->
 
@@ -102,8 +102,8 @@
 
             <ImageView
                 android:id="@+id/dot_status"
-                android:layout_width="12sp"
-                android:layout_height="12sp"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
                 android:layout_marginEnd="5dp"
                 app:srcCompat="@drawable/ic_dot_red" />
 
@@ -307,8 +307,8 @@
                         app:layout_constraintTop_toBottomOf="@+id/textView3">
 
                         <ImageView
-                            android:layout_width="12sp"
-                            android:layout_height="12sp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:layout_marginEnd="5dp"
                             app:srcCompat="@drawable/ic_bolt_green" />
 
@@ -503,8 +503,8 @@
 
 
                         <ImageView
-                            android:layout_width="12sp"
-                            android:layout_height="12sp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:layout_marginEnd="5dp"
                             app:srcCompat="@drawable/ic_drop_green" />
 
@@ -527,20 +527,305 @@
         </FrameLayout>
 
         <TableLayout
+            android:id="@+id/table2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:stretchColumns="*"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/frame2">
 
             <TableRow>
 
-            </TableRow>
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="10dp"
+                    app:cardBackgroundColor="@color/bg_card_outer"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="5dp">
 
-            <TableRow>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
+                        <TableLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+
+                            >
+
+                            <TableRow android:gravity="center">
+
+                                <ImageButton
+                                    android:id="@+id/up_pump"
+                                    android:layout_width="50dp"
+                                    android:layout_height="50dp"
+                                    android:background="#00FFFFFF"
+                                    android:src="@drawable/ic_up_selector" />
+
+                                <ImageButton
+                                    android:id="@+id/down_pump"
+                                    android:layout_width="50dp"
+                                    android:layout_height="50dp"
+                                    android:background="#00FFFFFF"
+                                    android:src="@drawable/ic_down_selector" />
+                            </TableRow>
+
+                        </TableLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_font"
+                            android:text="pH Pump"
+                            android:textAlignment="center" />
+
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="10dp"
+                    app:cardBackgroundColor="@color/bg_card_outer"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="5dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TableLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TableRow android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="50dp"
+                                    android:layout_height="50dp"
+                                    android:gravity="center"
+                                    android:text="A"
+                                    android:textAlignment="center"
+                                    android:textSize="24sp" />
+
+                                <TextView
+                                    android:layout_width="50dp"
+                                    android:layout_height="50dp"
+                                    android:gravity="center"
+                                    android:text="B"
+                                    android:textAlignment="center"
+                                    android:textSize="24sp" />
+                            </TableRow>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/montserrat_font"
+                                android:text="Nutrition Pump"
+                                android:textAlignment="center" />
+
+                        </TableLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
             </TableRow>
 
         </TableLayout>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardstat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="@color/bg_card_outer"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/table2">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginEnd="5dp"
+                    app:srcCompat="@drawable/ic_faucet_green" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@+font/montserrat_font"
+                    android:text="Liquid Pump Status"
+                    android:textColor="#059669"
+                    android:textFontWeight="700"
+                    android:textSize="12sp" />
+
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/phppm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            app:cardBackgroundColor="@color/bg_card_outer"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardstat">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="5dp"
+                        app:srcCompat="@drawable/setting_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@+font/montserrat_font"
+                        android:text="pH"
+
+                        android:textFontWeight="700"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginVertical="10dp"
+                    app:cardBackgroundColor="@color/bg_card_inner"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="5dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="center"
+                        android:layout_marginVertical="10dp"
+                        android:fontFamily="@font/digital"
+                        android:textSize="24sp"
+                        android:textFontWeight="1000"
+                        android:text="- - -"/>
+                </androidx.cardview.widget.CardView>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="10dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="5dp"
+                        app:srcCompat="@drawable/setting_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@+font/montserrat_font"
+                        android:text="PPM"
+
+                        android:textFontWeight="700"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginVertical="10dp"
+                    app:cardBackgroundColor="@color/bg_card_inner"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="5dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="center"
+                        android:layout_marginVertical="10dp"
+                        android:fontFamily="@font/digital"
+                        android:textSize="24sp"
+                        android:textFontWeight="1000"
+                        android:text="- - -"/>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="@color/bg_card_outer"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/phppm">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+
+                <ImageView
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginEnd="5dp"
+                    app:srcCompat="@drawable/setting_green" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@+font/montserrat_font"
+                    android:text="User Settings"
+                    android:textColor="#059669"
+                    android:textFontWeight="700"
+                    android:textSize="12sp" />
+
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
