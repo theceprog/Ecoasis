@@ -1,8 +1,10 @@
 package com.nu.ecoasis
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -19,6 +21,16 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         updateButtonStates()
+        val settingsButton: ImageButton = findViewById(R.id.settingbtn)
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, Settings::class.java)
+            startActivity(intent)
+        }
+        val calibrateButton: TextView = findViewById(R.id.calibratebtn)
+        calibrateButton.setOnClickListener {
+            val intent = Intent(this, Calibrate::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun updateButtonStates() {

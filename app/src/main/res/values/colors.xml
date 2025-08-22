@@ -5,4 +5,7 @@
     <color name="bg_card_outer">#fff</color>
     <color name="bg_card_inner">#ddd</color>
     <color name="themegreen">#059669</color>
+    <color name="bg_card_red">#FFA7A2</color>
+    <color name="bg_card_green">#B7FFB8</color>
+    <color name="bg_card_blue">#92DDFF</color>
 </resources>

@@ -12,6 +12,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ecoasis">
         <activity
+            android:name=".Settings"
+            android:label="Settings"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+        <activity
             android:name=".Calibrate"
             android:exported="false" />
         <activity
