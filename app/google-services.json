@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "553806809456",
+    "project_id": "ecoasus-da366",
+    "storage_bucket": "ecoasus-da366.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:553806809456:android:6c28326cc8d4195f2a27b5",
+        "android_client_info": {
+          "package_name": "com.nu.ecoasis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHJUZgcGwLKSVaWUTdr--1WnTaUhK37Gg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

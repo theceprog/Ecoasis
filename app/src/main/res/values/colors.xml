@@ -8,4 +8,5 @@
     <color name="bg_card_red">#FFA7A2</color>
     <color name="bg_card_green">#B7FFB8</color>
     <color name="bg_card_blue">#92DDFF</color>
+    <color name="textwhite">#000</color>
 </resources>

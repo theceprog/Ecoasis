@@ -2,4 +2,5 @@
 <resources>
     <color name="bg_card_outer">#222</color>
     <color name="bg_card_inner">#444</color>
+    <color name="textwhite">#FFF</color>
 </resources>
