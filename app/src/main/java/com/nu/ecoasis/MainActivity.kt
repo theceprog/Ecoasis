@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +24,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var luxval: TextView
     private lateinit var humidval: TextView
     private lateinit var airval: TextView
+    private lateinit var upnum: TextView
+    private lateinit var downnum: TextView
+    private lateinit var anum: TextView
+    private lateinit var bnum: TextView
+    private lateinit var upprogress: ProgressBar
+    private lateinit var downprogress: ProgressBar
+    private lateinit var aprogress: ProgressBar
+    private lateinit var bprogress: ProgressBar
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -53,13 +62,20 @@ class MainActivity : AppCompatActivity() {
         luxval = findViewById(R.id.lux_val)
         humidval = findViewById(R.id.humid_val)
         airval = findViewById(R.id.air_val)
+        upnum = findViewById(R.id.upnum)
+        downnum = findViewById(R.id.downnum)
+        anum = findViewById(R.id.anum)
+        bnum = findViewById(R.id.bnum)
+        aprogress = findViewById(R.id.aprogress)
+        bprogress = findViewById(R.id.bprogress)
+        upprogress = findViewById(R.id.upprogress)
+        downprogress = findViewById(R.id.downprogress)
         setupObservers()
         setupClickListeners()
     }
 
     private fun setupObservers() {
 
-        // Observe sensor ViewModel UI state
         lifecycleScope.launch {
             sensorViewModel.uiState.collect { uiState ->
                 updateUI(uiState)
@@ -74,6 +90,14 @@ class MainActivity : AppCompatActivity() {
         luxval.text = "${uiState.lux}"
         humidval.text = "${uiState.humid}"
         airval.text = "${uiState.air}"
+        upnum.text = "${uiState.up}%"
+        downnum.text = "${uiState.down}%"
+        anum.text = "${uiState.a}%"
+        bnum.text = "${uiState.b}%"
+        upprogress.progress = uiState.up.toInt()
+        downprogress.progress = uiState.down.toInt()
+        aprogress.progress = uiState.a.toInt()
+        bprogress.progress = uiState.b.toInt()
         uiState.error?.let { error ->
             showErrorDialog(error)
         }

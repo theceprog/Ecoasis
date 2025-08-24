@@ -15,6 +15,10 @@ data class SensorUiState(
     val lux: Double = 0.0,
     val ph: Double = 0.0,
     val ppm: Double = 0.0,
+    val up: Double = 0.0,
+    val down: Double = 0.0,
+    val a: Double = 0.0,
+    val b: Double = 0.0,
     val isLoading: Boolean = true,
     val error: String? = null
 )
@@ -43,15 +47,21 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                             humid = it.humid,
                             lux = it.lux,
                             ph = it.ph,
-                            ppm = it.ppm
+                            ppm = it.ppm,
+                            up = it.up,
+                            down = it.down,
+                            a = it.a,
+                            b = it.b
                         )
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    error = "Failed to load sensor data: ${e.message}"
-                ) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load sensor data: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -66,7 +76,11 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                         humid = it.humid,
                         lux = it.lux,
                         ph = it.ph,
-                        ppm = it.ppm
+                        ppm = it.ppm,
+                        up = it.up,
+                        down = it.down,
+                        a = it.a,
+                        b = it.b
                     )
                 }
             }

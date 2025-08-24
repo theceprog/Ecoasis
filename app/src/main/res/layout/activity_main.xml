@@ -411,6 +411,7 @@
                                 android:layout_weight="1">
 
                                 <ProgressBar
+                                    android:id="@+id/upprogress"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                                     android:layout_width="match_parent"
                                     android:layout_height="150dp"
@@ -432,6 +433,7 @@
                                 android:layout_weight="1">
 
                                 <ProgressBar
+                                    android:id="@+id/downprogress"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                                     android:layout_width="match_parent"
                                     android:layout_height="150dp"
@@ -452,6 +454,7 @@
                                 android:layout_weight="1">
 
                                 <ProgressBar
+                                    android:id="@+id/aprogress"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                                     android:layout_width="match_parent"
                                     android:layout_height="150dp"
@@ -476,6 +479,7 @@
                                 android:layout_weight="1">
 
                                 <ProgressBar
+                                    android:id="@+id/bprogress"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                                     android:layout_width="match_parent"
                                     android:layout_height="150dp"
@@ -501,7 +505,7 @@
                         <TableRow>
 
                             <TextView
-
+                                android:id="@+id/upnum"
                                 android:layout_weight="1"
                                 android:fontFamily="@font/digital"
                                 android:padding="8dp"
@@ -510,7 +514,7 @@
                                 android:textSize="24sp" />
 
                             <TextView
-
+                                android:id="@+id/downnum"
                                 android:layout_weight="1"
                                 android:fontFamily="@font/digital"
                                 android:padding="8dp"
@@ -519,7 +523,7 @@
                                 android:textSize="24sp" />
 
                             <TextView
-
+                                android:id="@+id/anum"
                                 android:layout_weight="1"
                                 android:fontFamily="@font/digital"
                                 android:padding="8dp"
@@ -528,7 +532,7 @@
                                 android:textSize="24sp" />
 
                             <TextView
-
+                                android:id="@+id/bnum"
                                 android:layout_weight="1"
                                 android:fontFamily="@font/digital"
                                 android:padding="8dp"
