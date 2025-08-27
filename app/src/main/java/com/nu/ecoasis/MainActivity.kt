@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
     private lateinit var sensorViewModel: SensorViewModel
@@ -72,8 +73,23 @@ class MainActivity : AppCompatActivity() {
         downprogress = findViewById(R.id.downprogress)
         setupObservers()
         setupClickListeners()
-    }
 
+        val textView3 = findViewById<TextView>(R.id.textView3)
+        textView3.text = getGreetingBasedOnTime()
+
+
+    }
+    private fun getGreetingBasedOnTime(): String {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+
+        return when (hour) {
+            in 5..11 -> "Good Morning!"
+            in 12..17 -> "Good Afternoon!"
+            in 18..21 -> "Good Evening!"
+            else -> "Good Night!"
+        }
+    }
     private fun setupObservers() {
 
         lifecycleScope.launch {
