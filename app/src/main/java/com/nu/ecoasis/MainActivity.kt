@@ -5,11 +5,13 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -33,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var downprogress: ProgressBar
     private lateinit var aprogress: ProgressBar
     private lateinit var bprogress: ProgressBar
+    private lateinit var dotStatus: ImageView
+    private lateinit var textStatus: TextView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,13 +75,31 @@ class MainActivity : AppCompatActivity() {
         bprogress = findViewById(R.id.bprogress)
         upprogress = findViewById(R.id.upprogress)
         downprogress = findViewById(R.id.downprogress)
+        dotStatus = findViewById(R.id.dot_status)
+        textStatus = findViewById(R.id.text_status)
         setupObservers()
         setupClickListeners()
 
         val textView3 = findViewById<TextView>(R.id.textView3)
         textView3.text = getGreetingBasedOnTime()
+        sensorViewModel.connectionStatus.observe(this) { isConnected ->
+            updateStatusUI(isConnected)
+        }
 
+    }
 
+    private fun updateStatusUI(isConnected: Boolean) {
+        if (isConnected) {
+            // Online status
+            dotStatus.setImageResource(R.drawable.ic_dot_green) // You need to create green dot
+            textStatus.text = "Online"
+            textStatus.setTextColor(ContextCompat.getColor(this, R.color.green))
+        } else {
+            // Offline status
+            dotStatus.setImageResource(R.drawable.ic_dot_red)
+            textStatus.text = "Offline"
+            textStatus.setTextColor(ContextCompat.getColor(this, R.color.red))
+        }
     }
     private fun getGreetingBasedOnTime(): String {
         val calendar = Calendar.getInstance()

@@ -1,5 +1,7 @@
 package com.nu.ecoasis
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +29,13 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
 
     private val _uiState = MutableStateFlow(SensorUiState())
     val uiState: StateFlow<SensorUiState> = _uiState.asStateFlow()
-
+    private val _connectionStatus = MutableLiveData<Boolean>()
+    val connectionStatus: LiveData<Boolean> = _connectionStatus
     init {
         loadSensorData()
         setupRealTimeUpdates()
     }
+
 
     fun loadSensorData() {
         viewModelScope.launch {
@@ -51,9 +55,21 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                             up = it.up,
                             down = it.down,
                             a = it.a,
-                            b = it.b
+                            b = it.b,
+                            isLoading = false,
+                            error = null
                         )
                     }
+                    _connectionStatus.value = true
+                } ?: run {
+                    // Handle case where sensorData is null
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "No sensor data available"
+                        )
+                    }
+                    _connectionStatus.value = false
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -62,6 +78,7 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                         error = "Failed to load sensor data: ${e.message}"
                     )
                 }
+                _connectionStatus.value = false
             }
         }
     }
@@ -80,9 +97,17 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                         up = it.up,
                         down = it.down,
                         a = it.a,
-                        b = it.b
+                        b = it.b,
+                        isLoading = false,
+                        error = null
                     )
                 }
+                _connectionStatus.value = true
+            } ?: run {
+                // Handle real-time connection failure
+                _connectionStatus.value = false
+                // Don't update UI state to preserve last known good values
+                // You could optionally set an error state here
             }
         }
     }
@@ -90,7 +115,6 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
     fun refreshData() {
         loadSensorData()
     }
-
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }

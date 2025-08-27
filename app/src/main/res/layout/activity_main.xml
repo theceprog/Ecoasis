@@ -149,7 +149,7 @@
             <TextView
                 android:id="@+id/text_status"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:fontFamily="@+font/montserrat_font"
                 android:text="Offline"
                 android:textColor="#c00"
