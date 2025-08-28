@@ -16,7 +16,7 @@ data class SensorUiState(
     val humid: Double = 0.0,
     val lux: Double = 0.0,
     val ph: Double = 0.0,
-    val ppm: Double = 0.0,
+    val ppm: Int = 0,
     val up: Double = 0.0,
     val down: Double = 0.0,
     val a: Double = 0.0,
