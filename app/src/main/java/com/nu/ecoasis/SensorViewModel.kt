@@ -22,7 +22,11 @@ data class SensorUiState(
     val a: Double = 0.0,
     val b: Double = 0.0,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val pumpa: Boolean = false,
+    val pumpb: Boolean = false,
+    val pumpdown: Boolean = false,
+    val pumpup: Boolean = false
 )
 
 class SensorViewModel(private val sensorRepository: SensorRepository) : ViewModel() {
@@ -56,6 +60,7 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                             down = it.down,
                             a = it.a,
                             b = it.b,
+
                             isLoading = false,
                             error = null
                         )
@@ -98,6 +103,7 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                         down = it.down,
                         a = it.a,
                         b = it.b,
+
                         isLoading = false,
                         error = null
                     )
@@ -106,8 +112,7 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
             } ?: run {
                 // Handle real-time connection failure
                 _connectionStatus.value = false
-                // Don't update UI state to preserve last known good values
-                // You could optionally set an error state here
+
             }
         }
     }

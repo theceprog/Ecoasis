@@ -10,8 +10,9 @@ data class SensorData(
     val up: Double = 0.0,
     val down: Double = 0.0,
     val a: Double = 0.0,
-    val b: Double = 0.0
-    ) {
+    val b: Double = 0.0,
+
+) {
     // Empty constructor for Firestore
-    constructor() : this(0.0, 0.0, 0.0, 0.0,0.0,0,0.0,0.0,0.0,0.0)
+    constructor() : this(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0)
 }
