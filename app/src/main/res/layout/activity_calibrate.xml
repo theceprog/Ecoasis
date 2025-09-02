@@ -420,6 +420,7 @@
                                         android:fontFamily="@font/digital"
                                         android:text="0.0"
                                         android:textAlignment="center"
+                                        android:textColor="@color/black"
                                         android:textSize="30sp"
                                         android:textStyle="bold" />
                                 </LinearLayout>
@@ -449,6 +450,7 @@
                                         android:fontFamily="@font/digital"
                                         android:text="0.0"
                                         android:textAlignment="center"
+                                        android:textColor="@color/black"
                                         android:textSize="30sp"
                                         android:textStyle="bold" />
                                 </LinearLayout>
@@ -478,6 +480,7 @@
                                         android:fontFamily="@font/digital"
                                         android:text="0.0"
                                         android:textAlignment="center"
+                                        android:textColor="@color/black"
                                         android:textSize="30sp"
                                         android:textStyle="bold" />
 

@@ -105,98 +105,98 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linearLayout">
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="20dp"
-                app:cardBackgroundColor="@color/bg_card_outer"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="5dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_margin="12dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_marginEnd="5dp"
-                            app:srcCompat="@drawable/baseline_wifi_off_24" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
+            <!--
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@+font/montserrat_font"
-                            android:text="Ecoasis is Disconnected"
-                            android:textFontWeight="700"
-                            android:textSize="12sp" />
+                            android:layout_margin="20dp"
+                            app:cardBackgroundColor="@color/bg_card_outer"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="5dp">
 
-
-                    </LinearLayout>
-
-                    <TableLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginHorizontal="10dp"
-                        android:layout_marginBottom="20dp"
-                        android:gravity="center"
-                        android:stretchColumns="0">
-
-                        <TableRow>
-
-                            <androidx.cardview.widget.CardView
+                            <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_marginStart="20dp"
-                                app:cardBackgroundColor="@color/bg_card_inner"
-                                app:cardCornerRadius="12dp"
-                                app:cardElevation="5dp">
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
 
                                 <LinearLayout
+
                                     android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_gravity="center"
-                                    android:gravity="center">
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical"
+                                    android:layout_margin="12dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <ImageView
+                                        android:layout_width="24dp"
+                                        android:layout_height="24dp"
+                                        android:layout_marginEnd="5dp"
+                                        app:srcCompat="@drawable/baseline_wifi_off_24" />
 
                                     <TextView
-                                        android:layout_width="match_parent"
+                                        android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:fontFamily="@font/digital"
-                                        android:text="192"
-                                        android:textAlignment="center"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                        android:fontFamily="@+font/montserrat_font"
+                                        android:text="Ecoasis is Disconnected"
+                                        android:textFontWeight="700"
+                                        android:textSize="12sp" />
+
 
                                 </LinearLayout>
 
-                            </androidx.cardview.widget.CardView>
+                                <TableLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:layout_marginHorizontal="10dp"
+                                    android:layout_marginBottom="20dp"
+                                    android:gravity="center"
+                                    android:stretchColumns="0">
 
-                            <Button
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:layout_marginStart="10dp"
-                                android:layout_marginEnd="20dp"
-                                android:backgroundTint="@color/bg_card_inner"
-                                android:text="Set"
-                                android:textColor="@color/textwhite" />
-                        </TableRow>
+                                    <TableRow>
 
-                    </TableLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                                        <androidx.cardview.widget.CardView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:layout_marginStart="20dp"
+                                            app:cardBackgroundColor="@color/bg_card_inner"
+                                            app:cardCornerRadius="12dp"
+                                            app:cardElevation="5dp">
 
+                                            <LinearLayout
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:layout_gravity="center"
+                                                android:gravity="center">
+
+                                                <TextView
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:fontFamily="@font/digital"
+                                                    android:text="192"
+                                                    android:textAlignment="center"
+                                                    android:textSize="16sp"
+                                                    android:textStyle="bold" />
+
+                                            </LinearLayout>
+
+                                        </androidx.cardview.widget.CardView>
+
+                                        <Button
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="match_parent"
+                                            android:layout_marginStart="10dp"
+                                            android:layout_marginEnd="20dp"
+                                            android:backgroundTint="@color/bg_card_inner"
+                                            android:text="Set"
+                                            android:textColor="@color/textwhite" />
+                                    </TableRow>
+
+                                </TableLayout>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+            -->
         </FrameLayout>
 
         <FrameLayout
@@ -265,42 +265,72 @@
                                 app:cardCornerRadius="12dp"
                                 app:cardElevation="5dp">
 
-                                <LinearLayout
+                                <androidx.constraintlayout.widget.ConstraintLayout
                                     android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_gravity="center"
-                                    android:gravity="center"
-                                    android:orientation="vertical"
-                                    android:paddingVertical="20dp">
+                                    android:layout_height="wrap_content">
 
-                                    <TextView
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:fontFamily="@font/montserrat_font"
-                                        android:text="Spinach"
-                                        android:textAlignment="center"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                    <ImageButton
+                                        android:id="@+id/leftbtn"
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:backgroundTint="#00000000"
+                                        android:src="@drawable/baseline_chevron_left_24"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent" />
 
-                                    <TextView
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="5dp"
-                                        android:fontFamily="@font/digital"
-                                        android:text="6 - 7"
-                                        android:textAlignment="center"
-                                        android:textSize="16sp" />
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingVertical="20dp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/rightbtn"
+                                        app:layout_constraintStart_toEndOf="@+id/leftbtn"
+                                        app:layout_constraintTop_toTopOf="parent">
 
-                                    <TextView
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="5dp"
-                                        android:fontFamily="@font/digital"
-                                        android:text="600 - 750 PPM"
-                                        android:textAlignment="center"
-                                        android:textSize="16sp" />
+                                        <TextView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:fontFamily="@font/montserrat_font"
+                                            android:text="Spinach"
+                                            android:textAlignment="center"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold" />
 
-                                </LinearLayout>
+                                        <TextView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="5dp"
+                                            android:fontFamily="@font/digital"
+                                            android:text="6 - 7"
+                                            android:textAlignment="center"
+                                            android:textSize="16sp" />
+
+                                        <TextView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="5dp"
+                                            android:fontFamily="@font/digital"
+                                            android:text="600 - 750 PPM"
+                                            android:textAlignment="center"
+                                            android:textSize="16sp" />
+
+                                    </LinearLayout>
+
+                                    <ImageButton
+                                        android:id="@+id/rightbtn"
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:backgroundTint="#00000000"
+                                        android:src="@drawable/baseline_chevron_right_24"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent" />
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                             </androidx.cardview.widget.CardView>
 
@@ -309,7 +339,8 @@
                                 android:layout_height="match_parent">
 
                                 <Button
-                                    android:layout_width="wrap_content"
+                                    android:id="@+id/presetsetbtn"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="10dp"
 
@@ -317,11 +348,25 @@
                                     android:backgroundTint="@color/bg_card_inner"
                                     android:text="Set"
                                     android:textColor="@color/textwhite"
-                                    app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent
 "
                                     app:layout_constraintStart_toStartOf="parent"
                                     app:layout_constraintTop_toTopOf="parent" />
+
+                                <Button
+                                    android:id="@+id/newpresetbtn"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+
+                                    android:layout_marginEnd="20dp"
+                                    android:backgroundTint="@color/bg_card_inner"
+                                    android:text="Manage"
+                                    android:textColor="@color/textwhite"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent
+"
+                                    app:layout_constraintStart_toStartOf="parent" />
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
                         </TableRow>
@@ -426,10 +471,10 @@
 
                                     <LinearLayout
                                         android:layout_width="0dp"
-                                        android:layout_weight="1"
+                                        android:layout_height="200dp"
                                         android:layout_gravity="center"
-                                        android:gravity="center"
-                                        android:layout_height="200dp">
+                                        android:layout_weight="1"
+                                        android:gravity="center">
 
                                         <SeekBar
                                             android:id="@+id/verta"
@@ -443,10 +488,10 @@
 
                                     <LinearLayout
                                         android:layout_width="0dp"
-                                        android:layout_weight="1"
+                                        android:layout_height="200dp"
                                         android:layout_gravity="center"
-                                        android:gravity="center"
-                                        android:layout_height="200dp">
+                                        android:layout_weight="1"
+                                        android:gravity="center">
 
                                         <SeekBar
                                             android:id="@+id/vertb"
@@ -585,14 +630,15 @@
                                         android:textFontWeight="700"
                                         android:textSize="12sp" />
                                 </TableRow>
+
                                 <TableRow>
 
                                     <LinearLayout
                                         android:layout_width="0dp"
-                                        android:layout_weight="1"
+                                        android:layout_height="200dp"
                                         android:layout_gravity="center"
-                                        android:gravity="center"
-                                        android:layout_height="200dp">
+                                        android:layout_weight="1"
+                                        android:gravity="center">
 
                                         <SeekBar
                                             android:id="@+id/vertc"
@@ -606,10 +652,10 @@
 
                                     <LinearLayout
                                         android:layout_width="0dp"
-                                        android:layout_weight="1"
+                                        android:layout_height="200dp"
                                         android:layout_gravity="center"
-                                        android:gravity="center"
-                                        android:layout_height="200dp">
+                                        android:layout_weight="1"
+                                        android:gravity="center">
 
                                         <SeekBar
                                             android:id="@+id/vertd"
