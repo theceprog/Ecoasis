@@ -3,6 +3,7 @@ package com.nu.ecoasis
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -24,14 +25,25 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-
 class CalibrateViewModel : ViewModel() {
     private val firestoreManager = FirestoreCalibrationManager()
-    private val _calibrationValues = MutableStateFlow<FirestoreCalibrationManager.CalibrationValues?>(null)
-    val calibrationValues: StateFlow<FirestoreCalibrationManager.CalibrationValues?> = _calibrationValues
+    private val _calibrationValues =
+        MutableStateFlow<FirestoreCalibrationManager.CalibrationValues?>(null)
+    private val _requestStatus = MutableStateFlow<Map<String, Boolean>?>(null) // Added missing
+
+    val calibrationValues: StateFlow<FirestoreCalibrationManager.CalibrationValues?> =
+        _calibrationValues
+    val requestStatus: StateFlow<Map<String, Boolean>?> = _requestStatus // Added missing
 
     init {
         startListening()
+        startListeningToRequests() // Added missing call
+    }
+
+    fun setCalibrationRequest(phType: String, value: Boolean) {
+        viewModelScope.launch {
+            firestoreManager.setRequestValue(phType, value) // This method needs to be implemented
+        }
     }
 
     private fun startListening() {
@@ -47,21 +59,83 @@ class CalibrateViewModel : ViewModel() {
         }
     }
 
+    private fun startListeningToRequests() {
+        viewModelScope.launch {
+            firestoreManager.listenForRequestUpdates(
+                onUpdate = { requests ->
+                    _requestStatus.value = requests
+                },
+                onError = { error ->
+                    error.printStackTrace()
+                }
+            )
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         firestoreManager.stopListening()
     }
 }
+
 class FirestoreCalibrationManager {
     private val db = FirebaseFirestore.getInstance()
     private val calibrationRef = db.collection("ecoasis").document("calibration")
     private var listener: ListenerRegistration? = null
+    private var requestListener: ListenerRegistration? = null // Added missing
 
     data class CalibrationValues(
         val ph4: Double? = null,
         val ph7: Double? = null,
         val ph9: Double? = null
     )
+
+    // Added missing method
+    suspend fun setRequestValue(phType: String, value: Boolean): Boolean {
+        return try {
+            val updateData = hashMapOf<String, Any>(
+                "request.$phType" to value
+            )
+            calibrationRef.update(updateData).await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun listenForRequestUpdates(
+        onUpdate: (Map<String, Boolean>) -> Unit,
+        onError: (Exception) -> Unit = {}
+    ) {
+        requestListener = calibrationRef.addSnapshotListener { snapshot, error ->
+            error?.let {
+                onError(it)
+                return@addSnapshotListener
+            }
+
+            snapshot?.let { document ->
+                if (document.exists() && document.contains("request")) {
+                    val requestMap = document.get("request") as? Map<String, Boolean>
+                    onUpdate(requestMap ?: emptyMap())
+                }
+            }
+        }
+    }
+
+    suspend fun getRequestStatus(): Map<String, Boolean> {
+        return try {
+            val document = calibrationRef.get().await()
+            if (document.exists() && document.contains("request")) {
+                document.get("request") as? Map<String, Boolean> ?: emptyMap()
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyMap()
+        }
+    }
 
     suspend fun getCalibrationValues(): CalibrationValues? {
         return try {
@@ -119,7 +193,9 @@ class FirestoreCalibrationManager {
 
     fun stopListening() {
         listener?.remove()
+        requestListener?.remove()
         listener = null
+        requestListener = null
     }
 
     fun startPeriodicCheck(
@@ -142,6 +218,9 @@ class Calibrate : AppCompatActivity() {
     private lateinit var textViewPh4: TextView
     private lateinit var textViewPh7: TextView
     private lateinit var textViewPh9: TextView
+    private lateinit var btnPh4: Button
+    private lateinit var btnPh7: Button
+    private lateinit var btnPh9: Button
     private val viewModel: CalibrateViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,10 +228,12 @@ class Calibrate : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_calibrate)
 
-        // Initialize TextViews
         textViewPh4 = findViewById(R.id.textViewPh4)
         textViewPh7 = findViewById(R.id.textViewPh7)
         textViewPh9 = findViewById(R.id.textViewPh9)
+        btnPh4 = findViewById(R.id.btnph4)
+        btnPh7 = findViewById(R.id.btnph7)
+        btnPh9 = findViewById(R.id.btnph9)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -160,7 +241,7 @@ class Calibrate : AppCompatActivity() {
             insets
         }
 
-        updateButtonStates()
+        setupButtonListeners()
         setupObservers()
 
         val backbutton: ImageButton = findViewById(R.id.backbutton)
@@ -176,10 +257,36 @@ class Calibrate : AppCompatActivity() {
         }
     }
 
+    private fun setupButtonListeners() {
+        btnPh4.setOnClickListener {
+            viewModel.setCalibrationRequest("ph4", true)
+            btnPh4.isEnabled = false
+            btnPh4.text = "Requesting..."
+        }
+
+        btnPh7.setOnClickListener {
+            viewModel.setCalibrationRequest("ph7", true)
+            btnPh7.isEnabled = false
+            btnPh7.text = "Requesting..."
+        }
+
+        btnPh9.setOnClickListener {
+            viewModel.setCalibrationRequest("ph9", true)
+            btnPh9.isEnabled = false
+            btnPh9.text = "Requesting..."
+        }
+    }
+
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.calibrationValues.collect { values ->
                 values?.let { updateUI(it) }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.requestStatus.collect { requests ->
+                requests?.let { updateButtonStates(it) }
             }
         }
     }
@@ -204,10 +311,21 @@ class Calibrate : AppCompatActivity() {
         }
     }
 
-    private fun updateButtonStates() {
-        val isNightMode = isNightModeEnabled()
-        findViewById<ImageButton>(R.id.settingbtn).isActivated = isNightMode
-        findViewById<ImageButton>(R.id.backbutton).isActivated = isNightMode
+    private fun updateButtonStates(requests: Map<String, Boolean>) {
+        requests["ph4"]?.let { isRequested ->
+            btnPh4.isEnabled = !isRequested
+            btnPh4.text = if (isRequested) "N/A" else "Set"
+        }
+
+        requests["ph7"]?.let { isRequested ->
+            btnPh7.isEnabled = !isRequested
+            btnPh7.text = if (isRequested) "N/A" else "Set"
+        }
+
+        requests["ph9"]?.let { isRequested ->
+            btnPh9.isEnabled = !isRequested
+            btnPh9.text = if (isRequested) "N/A" else "Set"
+        }
     }
 
     private fun isNightModeEnabled(): Boolean {
@@ -217,6 +335,6 @@ class Calibrate : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        updateButtonStates()
+        // Handle theme changes if needed
     }
 }
