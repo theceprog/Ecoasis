@@ -14,10 +14,199 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.Calendar
+
+data class SensorUiState(
+    val air: Double = 0.0,
+    val h2o: Double = 0.0,
+    val humid: Double = 0.0,
+    val lux: Double = 0.0,
+    val ph: Double = 0.0,
+    val ppm: Int = 0,
+    val up: Double = 0.0,
+    val down: Double = 0.0,
+    val a: Double = 0.0,
+    val b: Double = 0.0,
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val pumpa: Boolean = false,
+    val pumpb: Boolean = false,
+    val pumpdown: Boolean = false,
+    val pumpup: Boolean = false
+)
+
+class SensorViewModel(private val sensorRepository: SensorRepository) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(SensorUiState())
+    val uiState: StateFlow<SensorUiState> = _uiState.asStateFlow()
+    private val _connectionStatus = MutableLiveData<Boolean>()
+    val connectionStatus: LiveData<Boolean> = _connectionStatus
+
+    init {
+        loadSensorData()
+        setupRealTimeUpdates()
+    }
+
+
+    fun loadSensorData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            try {
+                val sensorData = sensorRepository.getSensorOne()
+                sensorData?.let {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            air = it.air,
+                            h2o = it.h2o,
+                            humid = it.humid,
+                            lux = it.lux,
+                            ph = it.ph,
+                            ppm = it.ppm,
+                            up = it.up,
+                            down = it.down,
+                            a = it.a,
+                            b = it.b,
+
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                    _connectionStatus.value = true
+                } ?: run {
+                    // Handle case where sensorData is null
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "No sensor data available"
+                        )
+                    }
+                    _connectionStatus.value = false
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load sensor data: ${e.message}"
+                    )
+                }
+                _connectionStatus.value = false
+            }
+        }
+    }
+
+    private fun setupRealTimeUpdates() {
+        sensorRepository.getSensorOneRealTime { sensorData ->
+            sensorData?.let {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        air = it.air,
+                        h2o = it.h2o,
+                        humid = it.humid,
+                        lux = it.lux,
+                        ph = it.ph,
+                        ppm = it.ppm,
+                        up = it.up,
+                        down = it.down,
+                        a = it.a,
+                        b = it.b,
+
+                        isLoading = false,
+                        error = null
+                    )
+                }
+                _connectionStatus.value = true
+            } ?: run {
+                // Handle real-time connection failure
+                _connectionStatus.value = false
+
+            }
+        }
+    }
+
+    fun refreshData() {
+        loadSensorData()
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+}
+
+class SensorViewModelFactory(private val sensorRepository: SensorRepository) :
+    ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SensorViewModel::class.java)) {
+            return SensorViewModel(sensorRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+data class SensorData(
+    val air: Double = 0.0,
+    val h2o: Double = 0.0,
+    val humid: Double = 0.0,
+    val lux: Double = 0.0,
+    val ph: Double = 0.0,
+    val ppm: Int = 0,
+    val up: Double = 0.0,
+    val down: Double = 0.0,
+    val a: Double = 0.0,
+    val b: Double = 0.0,
+
+    ) {
+    // Empty constructor for Firestore
+    constructor() : this(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0)
+}
+
+class SensorRepository {
+    private val sensorCollection = FirestoreManager.db.collection("ecoasis")
+    suspend fun getSensorOne(): SensorData? {
+        return try {
+            sensorCollection.document("readings").get().await().toObject(SensorData::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getSensorOneRealTime(onUpdate: (SensorData?) -> Unit) {
+        sensorCollection.document("readings").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                onUpdate(null)
+                return@addSnapshotListener
+            }
+
+            val sensorData = snapshot?.toObject(SensorData::class.java)
+            onUpdate(sensorData)
+        }
+    }
+
+}
+data class StatusData(
+    val pumpa: Boolean = false,
+    val pumpb: Boolean = false,
+    val pumpdown: Boolean = false,
+    val pumpup: Boolean = false
+
+) {
+    // Empty constructor for Firestore
+    constructor() : this(false,false,false,false)
+}
 
 class MainActivity : AppCompatActivity() {
     private lateinit var sensorViewModel: SensorViewModel
@@ -101,6 +290,7 @@ class MainActivity : AppCompatActivity() {
             textStatus.setTextColor(ContextCompat.getColor(this, R.color.red))
         }
     }
+
     private fun getGreetingBasedOnTime(): String {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -112,6 +302,7 @@ class MainActivity : AppCompatActivity() {
             else -> "Good Night!"
         }
     }
+
     private fun setupObservers() {
 
         lifecycleScope.launch {

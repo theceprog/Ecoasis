@@ -415,7 +415,7 @@
                                     android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/acidval"
+                                        android:id="@+id/textViewPh4"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:fontFamily="@font/digital"
@@ -446,7 +446,7 @@
                                     android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/neutralval"
+                                        android:id="@+id/textViewPh7"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:fontFamily="@font/digital"
@@ -477,7 +477,7 @@
                                     android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/baseval"
+                                        android:id="@+id/textViewPh9"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:fontFamily="@font/digital"
