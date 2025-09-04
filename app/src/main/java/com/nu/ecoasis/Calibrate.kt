@@ -261,19 +261,19 @@ class Calibrate : AppCompatActivity() {
         btnPh4.setOnClickListener {
             viewModel.setCalibrationRequest("ph4", true)
             btnPh4.isEnabled = false
-            btnPh4.text = "Requesting..."
+
         }
 
         btnPh7.setOnClickListener {
             viewModel.setCalibrationRequest("ph7", true)
             btnPh7.isEnabled = false
-            btnPh7.text = "Requesting..."
+
         }
 
         btnPh9.setOnClickListener {
             viewModel.setCalibrationRequest("ph9", true)
             btnPh9.isEnabled = false
-            btnPh9.text = "Requesting..."
+
         }
     }
 
@@ -314,17 +314,14 @@ class Calibrate : AppCompatActivity() {
     private fun updateButtonStates(requests: Map<String, Boolean>) {
         requests["ph4"]?.let { isRequested ->
             btnPh4.isEnabled = !isRequested
-            btnPh4.text = if (isRequested) "N/A" else "Set"
         }
 
         requests["ph7"]?.let { isRequested ->
             btnPh7.isEnabled = !isRequested
-            btnPh7.text = if (isRequested) "N/A" else "Set"
         }
 
         requests["ph9"]?.let { isRequested ->
             btnPh9.isEnabled = !isRequested
-            btnPh9.text = if (isRequested) "N/A" else "Set"
         }
     }
 
