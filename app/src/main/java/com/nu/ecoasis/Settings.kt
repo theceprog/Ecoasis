@@ -3,57 +3,149 @@ package com.nu.ecoasis
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.google.firebase.firestore.ListenerRegistration
+import com.nu.ecoasis.databinding.ActivitySettingsBinding
 
 class Settings : AppCompatActivity() {
+    private lateinit var binding: ActivitySettingsBinding
+    private val viewModel: RangeSettingsViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_settings)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+
+        updateButtonStates()
+        setupObservers()
+        setupSeekbarsWithAbsoluteRanges()
+        setupSeekbarListeners()
+
+        viewModel.fetchRangeSettings()
+        viewModel.startListeningForSettings()
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootView)) { v, insets ->
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(0, systemBars.top, 0, imeInsets.bottom)
             insets
         }
-        updateButtonStates()
 
-        val backbutton: ImageButton = findViewById(R.id.backbutton)
-        backbutton.setOnClickListener {
+        binding.backbutton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
 
-        val managebtn: Button = findViewById(R.id.newpresetbtn)
-        managebtn.setOnClickListener {
+        binding.newpresetbtn.setOnClickListener {
             val intent = Intent(this, PresetActivity::class.java)
             startActivity(intent)
         }
+
+        // Save button listener
+        binding.saveButton.setOnClickListener {
+            saveRangeSettings()
+        }
+    }
+    private fun setupSeekbarsWithAbsoluteRanges() {
+        // Set fixed absolute ranges for seekbars
+        binding.verta.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
+        binding.vertb.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
+        binding.vertc.max = FirestoreManager.TDS_ABS_MAX - FirestoreManager.TDS_ABS_MIN
+        binding.vertd.max = FirestoreManager.TDS_ABS_MAX - FirestoreManager.TDS_ABS_MIN
     }
 
+    private fun setupObservers() {
+        viewModel.rangeSettings.observe(this) { settings ->
+            updateSeekbarPositions(settings) // Only update positions, not ranges
+            updateDisplayValues(settings)
+        }
+    }
+
+    private fun updateSeekbarPositions(settings: RangeSettings) {
+        // Convert absolute values to seekbar progress (0 to max)
+        binding.verta.progress = settings.phMin - FirestoreManager.PH_ABS_MIN
+        binding.vertb.progress = settings.phMax - FirestoreManager.PH_ABS_MIN
+        binding.vertc.progress = settings.tdsMin - FirestoreManager.TDS_ABS_MIN
+        binding.vertd.progress = settings.tdsMax - FirestoreManager.TDS_ABS_MIN
+    }
+
+    private fun setupSeekbarListeners() {
+        binding.verta.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                // Convert progress back to absolute value
+                val actualValue = progress + FirestoreManager.PH_ABS_MIN
+                binding.phMinValue.text = actualValue.toString()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+
+        binding.vertb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val actualValue = progress + FirestoreManager.PH_ABS_MIN
+                binding.phMaxValue.text = actualValue.toString()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+
+        binding.vertc.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val actualValue = progress + FirestoreManager.TDS_ABS_MIN
+                binding.tdsMinValue.text = actualValue.toString()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+
+        binding.vertd.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val actualValue = progress + FirestoreManager.TDS_ABS_MIN
+                binding.tdsMaxValue.text = actualValue.toString()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+    }
+
+    private fun updateDisplayValues(settings: RangeSettings) {
+        binding.phMinValue.text = settings.phMin.toString()
+        binding.phMaxValue.text = settings.phMax.toString()
+        binding.tdsMinValue.text = settings.tdsMin.toString()
+        binding.tdsMaxValue.text = settings.tdsMax.toString()
+    }
+
+    private fun saveRangeSettings() {
+        // Convert seekbar progress back to absolute values
+        val phMin = binding.verta.progress + FirestoreManager.PH_ABS_MIN
+        val phMax = binding.vertb.progress + FirestoreManager.PH_ABS_MIN
+        val tdsMin = binding.vertc.progress + FirestoreManager.TDS_ABS_MIN
+        val tdsMax = binding.vertd.progress + FirestoreManager.TDS_ABS_MIN
+
+        // Save to Firestore
+        FirestoreManager.saveRangeSettings(phMin, phMax, tdsMin, tdsMax,
+            onSuccess = {
+                Toast.makeText(this, "Settings saved successfully!", Toast.LENGTH_SHORT).show()
+            },
+            onFailure = { exception ->
+                Toast.makeText(this, "Failed to save settings: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
     private fun updateButtonStates() {
         val isNightMode = isNightModeEnabled()
-        findViewById<ImageButton>(R.id.settingbtn)?.isActivated = isNightMode
-        findViewById<ImageButton>(R.id.backbutton)?.isActivated = isNightMode
+        binding.settingbtn?.isActivated = isNightMode
+        binding.backbutton?.isActivated = isNightMode
     }
 
     private fun isNightModeEnabled(): Boolean {
@@ -65,4 +157,51 @@ class Settings : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         updateButtonStates()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.stopListening()
+    }
 }
+
+class RangeSettingsViewModel : ViewModel() {
+    private val firestoreService = FirestoreManager
+    private val _rangeSettings = MutableLiveData<RangeSettings>()
+    val rangeSettings: LiveData<RangeSettings> = _rangeSettings
+
+    private var settingsListener: ListenerRegistration? = null
+
+    fun fetchRangeSettings() {
+        firestoreService.getRangeSettings(
+            onSuccess = { phMin, phMax, tdsMin, tdsMax ->
+                _rangeSettings.postValue(RangeSettings(phMin, phMax, tdsMin, tdsMax))
+            },
+            onFailure = { exception ->
+                // Use default values if fetch fails
+                _rangeSettings.postValue(RangeSettings(1, 14, 0, 1000))
+            }
+        )
+    }
+
+    fun startListeningForSettings() {
+        settingsListener = firestoreService.listenForRangeSettings(
+            onUpdate = { phMin, phMax, tdsMin, tdsMax ->
+                _rangeSettings.postValue(RangeSettings(phMin, phMax, tdsMin, tdsMax))
+            },
+            onError = { error ->
+                // Handle error, but keep previous values
+            }
+        )
+    }
+
+    fun stopListening() {
+        settingsListener?.remove()
+    }
+}
+
+data class RangeSettings(
+    val phMin: Int = 1,
+    val phMax: Int = 14,
+    val tdsMin: Int = 0,
+    val tdsMax: Int = 1000
+)
