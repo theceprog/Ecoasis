@@ -27,7 +27,7 @@ object FirestoreManager {
     const val PH_ABS_MIN = 1
     const val PH_ABS_MAX = 14
     const val TDS_ABS_MIN = 0
-    const val TDS_ABS_MAX = 1000
+    const val TDS_ABS_MAX = 1500
 
     init {
         val settings = firestoreSettings {
@@ -50,12 +50,12 @@ object FirestoreManager {
                     val phMin = clampPhValue(document.getLong("ph_min")?.toInt() ?: 1)
                     val phMax = clampPhValue(document.getLong("ph_max")?.toInt() ?: 14)
                     val tdsMin = clampTdsValue(document.getLong("tds_min")?.toInt() ?: 0)
-                    val tdsMax = clampTdsValue(document.getLong("tds_max")?.toInt() ?: 1000)
+                    val tdsMax = clampTdsValue(document.getLong("tds_max")?.toInt() ?: 1500)
 
                     onSuccess(phMin, phMax, tdsMin, tdsMax)
                 } else {
                     // Return default values if document doesn't exist
-                    onSuccess(1, 14, 0, 1000)
+                    onSuccess(1, 14, 0, 1500)
                 }
             }
             .addOnFailureListener { exception ->
@@ -80,12 +80,12 @@ object FirestoreManager {
                 val phMin = clampPhValue(snapshot.getLong("ph_min")?.toInt() ?: 1)
                 val phMax = clampPhValue(snapshot.getLong("ph_max")?.toInt() ?: 14)
                 val tdsMin = clampTdsValue(snapshot.getLong("tds_min")?.toInt() ?: 0)
-                val tdsMax = clampTdsValue(snapshot.getLong("tds_max")?.toInt() ?: 1000)
+                val tdsMax = clampTdsValue(snapshot.getLong("tds_max")?.toInt() ?: 1500)
 
                 onUpdate(phMin, phMax, tdsMin, tdsMax)
             } else {
                 // Use default values if document doesn't exist
-                onUpdate(1, 14, 0, 1000)
+                onUpdate(1, 14, 0, 1500)
             }
         }
     }

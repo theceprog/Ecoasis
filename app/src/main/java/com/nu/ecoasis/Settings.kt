@@ -57,7 +57,6 @@ class Settings : AppCompatActivity() {
         }
     }
     private fun setupSeekbarsWithAbsoluteRanges() {
-        // Set fixed absolute ranges for seekbars
         binding.verta.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
         binding.vertb.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
         binding.vertc.max = FirestoreManager.TDS_ABS_MAX - FirestoreManager.TDS_ABS_MIN
@@ -66,13 +65,12 @@ class Settings : AppCompatActivity() {
 
     private fun setupObservers() {
         viewModel.rangeSettings.observe(this) { settings ->
-            updateSeekbarPositions(settings) // Only update positions, not ranges
+            updateSeekbarPositions(settings)
             updateDisplayValues(settings)
         }
     }
 
     private fun updateSeekbarPositions(settings: RangeSettings) {
-        // Convert absolute values to seekbar progress (0 to max)
         binding.verta.progress = settings.phMin - FirestoreManager.PH_ABS_MIN
         binding.vertb.progress = settings.phMax - FirestoreManager.PH_ABS_MIN
         binding.vertc.progress = settings.tdsMin - FirestoreManager.TDS_ABS_MIN
@@ -82,7 +80,6 @@ class Settings : AppCompatActivity() {
     private fun setupSeekbarListeners() {
         binding.verta.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                // Convert progress back to absolute value
                 val actualValue = progress + FirestoreManager.PH_ABS_MIN
                 binding.phMinValue.text = actualValue.toString()
             }
@@ -126,7 +123,6 @@ class Settings : AppCompatActivity() {
     }
 
     private fun saveRangeSettings() {
-        // Convert seekbar progress back to absolute values
         val phMin = binding.verta.progress + FirestoreManager.PH_ABS_MIN
         val phMax = binding.vertb.progress + FirestoreManager.PH_ABS_MIN
         val tdsMin = binding.vertc.progress + FirestoreManager.TDS_ABS_MIN
@@ -177,8 +173,7 @@ class RangeSettingsViewModel : ViewModel() {
                 _rangeSettings.postValue(RangeSettings(phMin, phMax, tdsMin, tdsMax))
             },
             onFailure = { exception ->
-                // Use default values if fetch fails
-                _rangeSettings.postValue(RangeSettings(1, 14, 0, 1000))
+                _rangeSettings.postValue(RangeSettings(1, 14, 0, 1500))
             }
         )
     }
@@ -203,5 +198,5 @@ data class RangeSettings(
     val phMin: Int = 1,
     val phMax: Int = 14,
     val tdsMin: Int = 0,
-    val tdsMax: Int = 1000
+    val tdsMax: Int = 1500
 )
