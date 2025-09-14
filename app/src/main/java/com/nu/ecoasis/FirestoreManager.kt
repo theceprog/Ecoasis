@@ -10,6 +10,16 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.firestoreSettings
 import java.util.Date
 
+data class PlantPreset(
+    val name: String = "",
+    val minPH: Double = 0.0,
+    val maxPH: Double = 0.0,
+    val minPPM: Int = 0,
+    val maxPPM: Int = 0
+) {
+    constructor() : this("", 0.0, 0.0, 0, 0)
+}
+
 object FirestoreManager {
 
     val db: FirebaseFirestore by lazy {
@@ -314,6 +324,45 @@ object FirestoreManager {
                 onFailure(exception)
             }
     }
+    // Update in FirestoreManager.kt
+    fun getAllPlants(
+        onSuccess: (List<Pair<String, PlantPreset>>) -> Unit, // Returns documentId + plant data
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("plants")
+            .get()
+            .addOnSuccessListener { documents ->
+                val plants = mutableListOf<Pair<String, PlantPreset>>()
+                for (document in documents) {
+                    val plant = document.toObject(PlantPreset::class.java)
+                    plants.add(Pair(document.id, plant))
+                }
+                onSuccess(plants)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
 
+    // Update getPlantById method
+    fun getPlantById(
+        plantDocumentId: String,
+        onSuccess: (PlantPreset) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("plants").document(plantDocumentId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val plant = document.toObject(PlantPreset::class.java)
+                    onSuccess(plant ?: PlantPreset())
+                } else {
+                    onFailure(Exception("Plant not found"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
 
 }

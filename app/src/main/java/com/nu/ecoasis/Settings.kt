@@ -19,6 +19,8 @@ import com.nu.ecoasis.databinding.ActivitySettingsBinding
 class Settings : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private val viewModel: RangeSettingsViewModel by viewModels()
+    private var currentPlantIndex = 0
+    private var plantsList = emptyList<Pair<String, PlantPreset>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,9 +32,11 @@ class Settings : AppCompatActivity() {
         setupObservers()
         setupSeekbarsWithAbsoluteRanges()
         setupSeekbarListeners()
+        setupPlantPresetListeners()
 
         viewModel.fetchRangeSettings()
         viewModel.startListeningForSettings()
+        loadPlants()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootView)) { v, insets ->
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
@@ -51,11 +55,119 @@ class Settings : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Save button listener
         binding.saveButton.setOnClickListener {
             saveRangeSettings()
         }
     }
+
+
+    private fun setupPlantPresetListeners() {
+        binding.leftbtn.setOnClickListener {
+            if (plantsList.isNotEmpty()) {
+                currentPlantIndex = (currentPlantIndex - 1 + plantsList.size) % plantsList.size
+                updatePlantDisplay()
+            }
+        }
+
+        binding.rightbtn.setOnClickListener {
+            if (plantsList.isNotEmpty()) {
+                currentPlantIndex = (currentPlantIndex + 1) % plantsList.size
+                updatePlantDisplay()
+            }
+        }
+
+        binding.presetsetbtn.setOnClickListener {
+            if (plantsList.isNotEmpty()) {
+                val (documentId, plant) = plantsList[currentPlantIndex]
+                applyPlantPreset(plant, documentId)
+            }
+        }
+    }
+
+    private fun loadPlants() {
+        FirestoreManager.getAllPlants(
+            onSuccess = { plants ->
+                plantsList = plants
+                if (plants.isNotEmpty()) {
+                    updatePlantDisplay()
+                    loadLastAppliedPlant() // Load the last applied plant after plants are loaded
+                }
+            },
+            onFailure = { exception ->
+                Toast.makeText(this, "Failed to load plants: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    private fun updatePlantDisplay() {
+        val (_, plant) = plantsList[currentPlantIndex]
+        binding.plantName.text = plant.name
+        binding.phRange.text = "${plant.minPH} - ${plant.maxPH}"
+        binding.ppmRange.text = "${plant.minPPM} - ${plant.maxPPM} PPM"
+    }
+
+    private fun applyPlantPreset(plant: PlantPreset, documentId: String) {
+        // Convert Double values to Int for seekbars
+        val phMin = plant.minPH.toInt()
+        val phMax = plant.maxPH.toInt()
+
+        // Update seekbars
+        binding.verta.progress = phMin - FirestoreManager.PH_ABS_MIN
+        binding.vertb.progress = phMax - FirestoreManager.PH_ABS_MIN
+        binding.vertc.progress = plant.minPPM - FirestoreManager.TDS_ABS_MIN
+        binding.vertd.progress = plant.maxPPM - FirestoreManager.TDS_ABS_MIN
+
+        // Update display values
+        binding.phMinValue.text = phMin.toString()
+        binding.phMaxValue.text = phMax.toString()
+        binding.tdsMinValue.text = plant.minPPM.toString()
+        binding.tdsMaxValue.text = plant.maxPPM.toString()
+
+        Toast.makeText(this, "${plant.name} preset applied!", Toast.LENGTH_SHORT).show()
+
+        // Save the applied plant document ID to Firestore
+        saveAppliedPlantId(documentId)
+    }
+
+    private fun saveAppliedPlantId(documentId: String) {
+        val data = hashMapOf(
+            "appliedPlantDocumentId" to documentId,
+            "lastUpdated" to com.google.firebase.Timestamp.now()
+        )
+
+        FirestoreManager.db.collection("ecoasis").document("currentSettings")
+            .set(data, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener {
+                println("Applied plant document ID saved: $documentId")
+            }
+            .addOnFailureListener { e ->
+                println("Failed to save applied plant document ID: ${e.message}")
+            }
+    }
+
+    private fun loadLastAppliedPlant() {
+        FirestoreManager.db.collection("ecoasis").document("currentSettings")
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val appliedDocumentId = document.getString("appliedPlantDocumentId")
+                    appliedDocumentId?.let { docId ->
+                        // Find this plant in our list and select it
+                        val index = plantsList.indexOfFirst { it.first == docId }
+                        if (index != -1) {
+                            currentPlantIndex = index
+                            updatePlantDisplay()
+                            val (_, plant) = plantsList[index]
+                            applyPlantPreset(plant, docId)
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                println("Failed to load last applied plant settings: ${exception.message}")
+            }
+    }
+
     private fun setupSeekbarsWithAbsoluteRanges() {
         binding.verta.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
         binding.vertb.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN

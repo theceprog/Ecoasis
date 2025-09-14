@@ -27,7 +27,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 data class PlantItem(
-    val id: Int = 0,
     val name: String = "",
     val minPH: Double = 0.0,
     val maxPH: Double = 0.0,
@@ -51,7 +50,6 @@ class FirestorePlantManager {
             val querySnapshot = plantsCollection.get().await()
             querySnapshot.documents.map { document ->
                 PlantItem(
-                    id = document.getLong("id")?.toInt() ?: 0,
                     name = document.getString("name") ?: "",
                     minPH = document.getDouble("minPH") ?: 0.0,
                     maxPH = document.getDouble("maxPH") ?: 0.0,
@@ -59,7 +57,7 @@ class FirestorePlantManager {
                     maxPPM = document.getLong("maxPPM")?.toInt() ?: 0,
                     documentId = document.id
                 )
-            }.sortedBy { it.id }
+            }.sortedBy { it.name }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -78,11 +76,11 @@ class FirestorePlantManager {
 
     suspend fun initializeDefaultPlants(): Boolean {
         val defaultPlants = listOf(
-            PlantItem(1, "Spinach", 6.0, 7.0, 600, 750),
-            PlantItem(2, "Lettuce", 5.5, 6.5, 500, 700),
-            PlantItem(3, "Tomato", 6.0, 6.8, 800, 1200),
-            PlantItem(4, "Basil", 5.5, 6.5, 700, 900),
-            PlantItem(5, "Kale", 6.0, 7.0, 800, 1000)
+            PlantItem("Spinach", 6.0, 7.0, 600, 750),
+            PlantItem("Lettuce", 5.5, 6.5, 500, 700),
+            PlantItem( "Tomato", 6.0, 6.8, 800, 1200),
+            PlantItem( "Basil", 5.5, 6.5, 700, 900),
+            PlantItem("Kale", 6.0, 7.0, 800, 1000)
         )
 
         return try {
@@ -90,7 +88,6 @@ class FirestorePlantManager {
             if (existingPlants.isEmpty()) {
                 defaultPlants.forEach { plant ->
                     val plantData = hashMapOf(
-                        "id" to plant.id,
                         "name" to plant.name,
                         "minPH" to plant.minPH,
                         "maxPH" to plant.maxPH,
