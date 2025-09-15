@@ -40,6 +40,12 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
+        // Check if user is already logged in
+        if (FirestoreManager().isUserLoggedIn()) {
+            redirectToMainActivity()
+            return
+        }
+
         loginButton.setOnClickListener {
             loginUser()
         }
@@ -82,7 +88,7 @@ class LoginActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
 
         // Use FirestoreManager to login user
-        FirestoreManager.loginUser(
+        FirestoreManager().loginUser(
             email = email,
             password = password,
             onSuccess = { user ->
@@ -90,13 +96,29 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
 
                 // Redirect to MainActivity
-                val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("email", email)
-                startActivity(intent)
-                finish()
+                redirectToMainActivity()
             },
             onFailure = { exception ->
                 progressBar.visibility = View.GONE
+                Toast.makeText(this, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    private fun redirectToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+
+    private fun sendPasswordResetEmail(email: String) {
+        FirestoreManager().sendPasswordResetEmail(
+            email = email,
+            onSuccess = {
+                Toast.makeText(this, "Password reset email sent", Toast.LENGTH_SHORT).show()
+            },
+            onFailure = { exception ->
                 Toast.makeText(this, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
         )

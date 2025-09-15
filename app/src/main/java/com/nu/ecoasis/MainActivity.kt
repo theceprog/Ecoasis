@@ -4,7 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
-import android.view.WindowManager
+import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -14,7 +14,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -27,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 
 data class SensorUiState(
@@ -49,7 +47,7 @@ data class SensorUiState(
     val pumpup: Boolean = false
 )
 
-class SensorViewModel(private val sensorRepository: SensorRepository) : ViewModel() {
+class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SensorUiState())
     val uiState: StateFlow<SensorUiState> = _uiState.asStateFlow()
@@ -61,13 +59,12 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
         setupRealTimeUpdates()
     }
 
-
     fun loadSensorData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                val sensorData = sensorRepository.getSensorOne()
+                val sensorData = firestoreManager.getSensorOne()
                 sensorData?.let {
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -81,7 +78,6 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                             down = it.down,
                             a = it.a,
                             b = it.b,
-
                             isLoading = false,
                             error = null
                         )
@@ -110,7 +106,7 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
     }
 
     private fun setupRealTimeUpdates() {
-        sensorRepository.getSensorOneRealTime { sensorData ->
+        firestoreManager.getSensorOneRealTime { sensorData ->
             sensorData?.let {
                 _uiState.update { currentState ->
                     currentState.copy(
@@ -124,7 +120,6 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
                         down = it.down,
                         a = it.a,
                         b = it.b,
-
                         isLoading = false,
                         error = null
                     )
@@ -133,7 +128,6 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
             } ?: run {
                 // Handle real-time connection failure
                 _connectionStatus.value = false
-
             }
         }
     }
@@ -147,66 +141,16 @@ class SensorViewModel(private val sensorRepository: SensorRepository) : ViewMode
     }
 }
 
-class SensorViewModelFactory(private val sensorRepository: SensorRepository) :
+class SensorViewModelFactory(private val firestoreManager: FirestoreManager) :
     ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SensorViewModel::class.java)) {
-            return SensorViewModel(sensorRepository) as T
+            return SensorViewModel(firestoreManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-}
-
-data class SensorData(
-    val air: Double = 0.0,
-    val h2o: Double = 0.0,
-    val humid: Double = 0.0,
-    val lux: Double = 0.0,
-    val ph: Double = 0.0,
-    val ppm: Int = 0,
-    val up: Double = 0.0,
-    val down: Double = 0.0,
-    val a: Double = 0.0,
-    val b: Double = 0.0,
-
-    ) {
-    // Empty constructor for Firestore
-    constructor() : this(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0)
-}
-class SensorRepository {
-    private val sensorCollection by lazy { FirestoreManager.db.collection("ecoasis") }
-
-    suspend fun getSensorOne(): SensorData? {
-        return try {
-            sensorCollection.document("readings").get().await().toObject(SensorData::class.java)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    fun getSensorOneRealTime(onUpdate: (SensorData?) -> Unit) {
-        sensorCollection.document("readings").addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                onUpdate(null)
-                return@addSnapshotListener
-            }
-
-            val sensorData = snapshot?.toObject(SensorData::class.java)
-            onUpdate(sensorData)
-        }
-    }
-}
-data class StatusData(
-    val pumpa: Boolean = false,
-    val pumpb: Boolean = false,
-    val pumpdown: Boolean = false,
-    val pumpup: Boolean = false
-
-) {
-    // Empty constructor for Firestore
-    constructor() : this(false,false,false,false)
 }
 
 class MainActivity : AppCompatActivity() {
@@ -227,6 +171,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bprogress: ProgressBar
     private lateinit var dotStatus: ImageView
     private lateinit var textStatus: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -236,9 +181,10 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootView)) { v, insets ->
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, systemBars.top, 0, imeInsets.bottom) // push content above keyboard
+            v.setPadding(0, systemBars.top, 0, imeInsets.bottom)
             insets
         }
+
         updateButtonStates()
         val settingsButton: ImageButton = findViewById(R.id.settingbtn)
         settingsButton.setOnClickListener {
@@ -251,9 +197,12 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, Calibrate::class.java)
             startActivity(intent)
         }
-        val repository = SensorRepository()
-        val factory = SensorViewModelFactory(repository)
+
+        // Use FirestoreManager directly instead of SensorRepository
+        val firestoreManager = FirestoreManager()
+        val factory = SensorViewModelFactory(firestoreManager)
         sensorViewModel = ViewModelProvider(this, factory)[SensorViewModel::class.java]
+
         tempval = findViewById(R.id.temp_val)
         phval = findViewById(R.id.ph_val)
         ppmval = findViewById(R.id.ppm_val)
@@ -270,6 +219,7 @@ class MainActivity : AppCompatActivity() {
         downprogress = findViewById(R.id.downprogress)
         dotStatus = findViewById(R.id.dot_status)
         textStatus = findViewById(R.id.text_status)
+
         setupObservers()
         setupClickListeners()
 
@@ -278,13 +228,12 @@ class MainActivity : AppCompatActivity() {
         sensorViewModel.connectionStatus.observe(this) { isConnected ->
             updateStatusUI(isConnected)
         }
-
     }
 
     private fun updateStatusUI(isConnected: Boolean) {
         if (isConnected) {
             // Online status
-            dotStatus.setImageResource(R.drawable.ic_dot_green) // You need to create green dot
+            dotStatus.setImageResource(R.drawable.ic_dot_green)
             textStatus.text = "Online"
             textStatus.setTextColor(ContextCompat.getColor(this, R.color.green))
         } else {
@@ -308,7 +257,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-
         lifecycleScope.launch {
             sensorViewModel.uiState.collect { uiState ->
                 updateUI(uiState)
@@ -337,10 +285,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        //buttonRefresh.setOnClickListener {
-        //       sensorViewModel.refreshData()
-        //   }
-
+        // Setup any click listeners if needed
     }
 
     private fun showErrorDialog(message: String) {
@@ -352,7 +297,6 @@ class MainActivity : AppCompatActivity() {
         toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 100)
         toast.show()
     }
-
 
     private fun updateButtonStates() {
         val isNightMode = isNightModeEnabled()

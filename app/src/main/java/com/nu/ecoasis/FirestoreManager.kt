@@ -2,12 +2,16 @@ package com.nu.ecoasis
 
 import android.util.Patterns
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.firestoreSettings
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 data class PlantPreset(
@@ -20,24 +24,16 @@ data class PlantPreset(
     constructor() : this("", 0.0, 0.0, 0, 0)
 }
 
-object FirestoreManager {
+class FirestoreManager {
 
-    val db: FirebaseFirestore by lazy {
-        val firestore = Firebase.firestore
-        // Configure settings only once when Firestore is first accessed
-        val settings = firestoreSettings {
-            isPersistenceEnabled = true
-            cacheSizeBytes = FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED
-        }
-        firestore.firestoreSettings = settings
-        firestore
-    }
-
+    val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
     // Define actual possible ranges (absolute values)
-    const val PH_ABS_MIN = 1
-    const val PH_ABS_MAX = 14
-    const val TDS_ABS_MIN = 0
-    const val TDS_ABS_MAX = 1500
+    private val sensorCollection by lazy { db.collection("ecoasis") }
+    val PH_ABS_MIN = 1
+    val PH_ABS_MAX = 14
+    val TDS_ABS_MIN = 0
+    val TDS_ABS_MAX = 1500
 
     init {
         val settings = firestoreSettings {
@@ -168,50 +164,24 @@ object FirestoreManager {
             return
         }
 
-        val docRef = db.collection("users").document(email)
-
-        docRef.get()
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()) {
-                    val user = document.toObject(User::class.java)
-
+        // Sign in with Firebase Auth
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Get user data from Firestore after successful authentication
+                    val user = auth.currentUser
                     if (user != null) {
-                        // Verify password (in production, use proper password hashing)
-                        if (user.password == password) {
-                            onSuccess(user)
-                        } else {
-                            onFailure(Exception("Invalid password"))
-                        }
+                        getUserDataFromFirestore(user.uid, onSuccess, onFailure)
                     } else {
-                        onFailure(Exception("User data corrupted"))
+                        onFailure(Exception("User not found"))
                     }
                 } else {
-                    onFailure(Exception("User not found"))
+                    onFailure(task.exception ?: Exception("Authentication failed"))
                 }
             }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
     }
 
-    // Add User data class if you don't have it already
-    data class User(
-        val email: String = "",
-        val password: String = "",
-        val name: String = "",
-        val phone: String = "",
-        val gender: String = ""
-    ) {
-        // Empty constructor for Firestore
-        constructor() : this("", "", "", "", "")
-    }
-
-    // Add email validation helper
-    private fun isValidEmail(email: String): Boolean {
-        val pattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
-        return pattern.matches(email)
-    }// Add this to your FirestoreManager.kt
-
+    // Register with Firebase Authentication
     fun registerUser(
         email: String,
         firstName: String,
@@ -247,75 +217,82 @@ object FirestoreManager {
             return
         }
 
-        // Check if email already exists
-        db.collection("users").document(email)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    onFailure(Exception("Email already registered"))
-                } else {
-                    // Check if username already exists
-                    checkUsernameAvailability(
-                        email,
-                        firstName,
-                        lastName,
-                        username,
-                        password,
-                        onSuccess,
-                        onFailure
-                    )
-                }
+        // Check if username already exists
+        checkUsernameAvailability(username) { usernameAvailable ->
+            if (usernameAvailable) {
+                // Create user with Firebase Auth
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val firebaseUser = auth.currentUser
+                            if (firebaseUser != null) {
+                                // Update user profile with display name
+                                val profileUpdates = UserProfileChangeRequest.Builder()
+                                    .setDisplayName("$firstName $lastName")
+                                    .build()
+
+                                firebaseUser.updateProfile(profileUpdates)
+                                    .addOnCompleteListener { profileTask ->
+                                        if (profileTask.isSuccessful) {
+                                            // Save additional user data to Firestore
+                                            saveUserDataToFirestore(
+                                                firebaseUser.uid,
+                                                email,
+                                                firstName,
+                                                lastName,
+                                                username,
+                                                onSuccess,
+                                                onFailure
+                                            )
+                                        } else {
+                                            onFailure(profileTask.exception ?: Exception("Profile update failed"))
+                                        }
+                                    }
+                            } else {
+                                onFailure(Exception("User creation failed"))
+                            }
+                        } else {
+                            onFailure(task.exception ?: Exception("Registration failed"))
+                        }
+                    }
+            } else {
+                onFailure(Exception("Username already taken"))
             }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
+        }
     }
 
-    private fun checkUsernameAvailability(
-        email: String,
-        firstName: String,
-        lastName: String,
-        username: String,
-        password: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
+    private fun checkUsernameAvailability(username: String, callback: (Boolean) -> Unit) {
         db.collection("users")
             .whereEqualTo("username", username)
             .get()
             .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    // Username is available, create new user
-                    createUser(email, firstName, lastName, username, password, onSuccess, onFailure)
-                } else {
-                    onFailure(Exception("Username already taken"))
-                }
+                callback(documents.isEmpty)
             }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
+            .addOnFailureListener {
+                callback(true) // Assume available if check fails
             }
     }
 
-    private fun createUser(
+    private fun saveUserDataToFirestore(
+        uid: String,
         email: String,
         firstName: String,
         lastName: String,
         username: String,
-        password: String,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         val user = hashMapOf(
+            "uid" to uid,
             "firstName" to firstName,
             "lastName" to lastName,
             "email" to email,
             "username" to username,
-            "password" to password, // ⚠️ In production, hash this password!
             "createdAt" to Date(),
             "updatedAt" to Date()
         )
 
-        db.collection("users").document(email)
+        db.collection("users").document(uid)
             .set(user)
             .addOnSuccessListener {
                 onSuccess()
@@ -323,6 +300,131 @@ object FirestoreManager {
             .addOnFailureListener { exception ->
                 onFailure(exception)
             }
+    }
+
+    private fun getUserDataFromFirestore(
+        uid: String,
+        onSuccess: (User) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val user = document.toObject(User::class.java)
+                    if (user != null) {
+                        onSuccess(user)
+                    } else {
+                        onFailure(Exception("User data not found"))
+                    }
+                } else {
+                    onFailure(Exception("User document not found"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+    // Check if user is logged in
+    fun isUserLoggedIn(): Boolean {
+        return auth.currentUser != null
+    }
+
+    // Get current user
+    fun getCurrentUser(): com.google.firebase.auth.FirebaseUser? {
+        return auth.currentUser
+    }
+
+    // Sign out
+    fun signOut() {
+        auth.signOut()
+    }
+
+    // Password reset
+    fun sendPasswordResetEmail(
+        email: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (email.isBlank() || !isValidEmail(email)) {
+            onFailure(Exception("Please enter a valid email"))
+            return
+        }
+
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onFailure(task.exception ?: Exception("Password reset failed"))
+                }
+            }
+    }
+
+
+    // Sensor data methods (migrated from SensorRepository)
+    suspend fun getSensorOne(): SensorData? {
+        return try {
+            sensorCollection.document("readings").get().await().toObject(SensorData::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getSensorOneRealTime(onUpdate: (SensorData?) -> Unit) {
+        sensorCollection.document("readings").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                onUpdate(null)
+                return@addSnapshotListener
+            }
+
+            val sensorData = snapshot?.toObject(SensorData::class.java)
+            onUpdate(sensorData)
+        }
+    }
+    data class SensorData(
+        val air: Double = 0.0,
+        val h2o: Double = 0.0,
+        val humid: Double = 0.0,
+        val lux: Double = 0.0,
+        val ph: Double = 0.0,
+        val ppm: Int = 0,
+        val up: Double = 0.0,
+        val down: Double = 0.0,
+        val a: Double = 0.0,
+        val b: Double = 0.0,
+    ) {
+        constructor() : this(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0)
+    }
+
+    // Status data class
+    data class StatusData(
+        val pumpa: Boolean = false,
+        val pumpb: Boolean = false,
+        val pumpdown: Boolean = false,
+        val pumpup: Boolean = false
+    ) {
+        constructor() : this(false, false, false, false)
+    }
+
+
+    data class User(
+        val uid: String = "",
+        val email: String = "",
+        val firstName: String = "",
+        val lastName: String = "",
+        val username: String = "",
+        val createdAt: Date = Date(),
+        val updatedAt: Date = Date()
+    ) {
+        constructor() : this("", "", "", "", "", Date(), Date())
+    }
+
+    // Email validation helper
+    private fun isValidEmail(email: String): Boolean {
+        val pattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
+        return pattern.matches(email)
     }
     // Update in FirestoreManager.kt
     fun getAllPlants(

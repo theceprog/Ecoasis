@@ -58,5 +58,6 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation ("com.google.firebase:firebase-auth-ktx:23.2.1")
     implementation("com.google.android.gms:play-services-base:18.7.2")
 }

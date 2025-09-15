@@ -85,7 +85,7 @@ class Settings : AppCompatActivity() {
     }
 
     private fun loadPlants() {
-        FirestoreManager.getAllPlants(
+        FirestoreManager().getAllPlants(
             onSuccess = { plants ->
                 plantsList = plants
                 if (plants.isNotEmpty()) {
@@ -112,10 +112,10 @@ class Settings : AppCompatActivity() {
         val phMax = plant.maxPH.toInt()
 
         // Update seekbars
-        binding.verta.progress = phMin - FirestoreManager.PH_ABS_MIN
-        binding.vertb.progress = phMax - FirestoreManager.PH_ABS_MIN
-        binding.vertc.progress = plant.minPPM - FirestoreManager.TDS_ABS_MIN
-        binding.vertd.progress = plant.maxPPM - FirestoreManager.TDS_ABS_MIN
+        binding.verta.progress = phMin - FirestoreManager().PH_ABS_MIN
+        binding.vertb.progress = phMax - FirestoreManager().PH_ABS_MIN
+        binding.vertc.progress = plant.minPPM - FirestoreManager().TDS_ABS_MIN
+        binding.vertd.progress = plant.maxPPM - FirestoreManager().TDS_ABS_MIN
 
         // Update display values
         binding.phMinValue.text = phMin.toString()
@@ -135,7 +135,7 @@ class Settings : AppCompatActivity() {
             "lastUpdated" to com.google.firebase.Timestamp.now()
         )
 
-        FirestoreManager.db.collection("ecoasis").document("currentSettings")
+        FirestoreManager().db.collection("ecoasis").document("currentSettings")
             .set(data, com.google.firebase.firestore.SetOptions.merge())
             .addOnSuccessListener {
                 println("Applied plant document ID saved: $documentId")
@@ -146,7 +146,7 @@ class Settings : AppCompatActivity() {
     }
 
     private fun loadLastAppliedPlant() {
-        FirestoreManager.db.collection("ecoasis").document("currentSettings")
+        FirestoreManager().db.collection("ecoasis").document("currentSettings")
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -169,10 +169,10 @@ class Settings : AppCompatActivity() {
     }
 
     private fun setupSeekbarsWithAbsoluteRanges() {
-        binding.verta.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
-        binding.vertb.max = FirestoreManager.PH_ABS_MAX - FirestoreManager.PH_ABS_MIN
-        binding.vertc.max = FirestoreManager.TDS_ABS_MAX - FirestoreManager.TDS_ABS_MIN
-        binding.vertd.max = FirestoreManager.TDS_ABS_MAX - FirestoreManager.TDS_ABS_MIN
+        binding.verta.max = FirestoreManager().PH_ABS_MAX - FirestoreManager().PH_ABS_MIN
+        binding.vertb.max = FirestoreManager().PH_ABS_MAX - FirestoreManager().PH_ABS_MIN
+        binding.vertc.max = FirestoreManager().TDS_ABS_MAX - FirestoreManager().TDS_ABS_MIN
+        binding.vertd.max = FirestoreManager().TDS_ABS_MAX - FirestoreManager().TDS_ABS_MIN
     }
 
     private fun setupObservers() {
@@ -183,16 +183,16 @@ class Settings : AppCompatActivity() {
     }
 
     private fun updateSeekbarPositions(settings: RangeSettings) {
-        binding.verta.progress = settings.phMin - FirestoreManager.PH_ABS_MIN
-        binding.vertb.progress = settings.phMax - FirestoreManager.PH_ABS_MIN
-        binding.vertc.progress = settings.tdsMin - FirestoreManager.TDS_ABS_MIN
-        binding.vertd.progress = settings.tdsMax - FirestoreManager.TDS_ABS_MIN
+        binding.verta.progress = settings.phMin - FirestoreManager().PH_ABS_MIN
+        binding.vertb.progress = settings.phMax - FirestoreManager().PH_ABS_MIN
+        binding.vertc.progress = settings.tdsMin - FirestoreManager().TDS_ABS_MIN
+        binding.vertd.progress = settings.tdsMax - FirestoreManager().TDS_ABS_MIN
     }
 
     private fun setupSeekbarListeners() {
         binding.verta.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val actualValue = progress + FirestoreManager.PH_ABS_MIN
+                val actualValue = progress + FirestoreManager().PH_ABS_MIN
                 binding.phMinValue.text = actualValue.toString()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -201,7 +201,7 @@ class Settings : AppCompatActivity() {
 
         binding.vertb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val actualValue = progress + FirestoreManager.PH_ABS_MIN
+                val actualValue = progress + FirestoreManager().PH_ABS_MIN
                 binding.phMaxValue.text = actualValue.toString()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -210,7 +210,7 @@ class Settings : AppCompatActivity() {
 
         binding.vertc.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val actualValue = progress + FirestoreManager.TDS_ABS_MIN
+                val actualValue = progress + FirestoreManager().TDS_ABS_MIN
                 binding.tdsMinValue.text = actualValue.toString()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -219,7 +219,7 @@ class Settings : AppCompatActivity() {
 
         binding.vertd.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val actualValue = progress + FirestoreManager.TDS_ABS_MIN
+                val actualValue = progress + FirestoreManager().TDS_ABS_MIN
                 binding.tdsMaxValue.text = actualValue.toString()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -235,13 +235,13 @@ class Settings : AppCompatActivity() {
     }
 
     private fun saveRangeSettings() {
-        val phMin = binding.verta.progress + FirestoreManager.PH_ABS_MIN
-        val phMax = binding.vertb.progress + FirestoreManager.PH_ABS_MIN
-        val tdsMin = binding.vertc.progress + FirestoreManager.TDS_ABS_MIN
-        val tdsMax = binding.vertd.progress + FirestoreManager.TDS_ABS_MIN
+        val phMin = binding.verta.progress + FirestoreManager().PH_ABS_MIN
+        val phMax = binding.vertb.progress + FirestoreManager().PH_ABS_MIN
+        val tdsMin = binding.vertc.progress + FirestoreManager().TDS_ABS_MIN
+        val tdsMax = binding.vertd.progress + FirestoreManager().TDS_ABS_MIN
 
         // Save to Firestore
-        FirestoreManager.saveRangeSettings(phMin, phMax, tdsMin, tdsMax,
+        FirestoreManager().saveRangeSettings(phMin, phMax, tdsMin, tdsMax,
             onSuccess = {
                 Toast.makeText(this, "Settings saved successfully!", Toast.LENGTH_SHORT).show()
             },
@@ -273,7 +273,7 @@ class Settings : AppCompatActivity() {
 }
 
 class RangeSettingsViewModel : ViewModel() {
-    private val firestoreService = FirestoreManager
+    private val firestoreService = FirestoreManager()
     private val _rangeSettings = MutableLiveData<RangeSettings>()
     val rangeSettings: LiveData<RangeSettings> = _rangeSettings
 

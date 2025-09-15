@@ -14,7 +14,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import java.util.Date
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -146,7 +145,7 @@ class SignUpActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
 
         // Use FirestoreManager to register user
-        FirestoreManager.registerUser(
+        FirestoreManager().registerUser(
             email = email,
             firstName = firstName,
             lastName = lastName,
