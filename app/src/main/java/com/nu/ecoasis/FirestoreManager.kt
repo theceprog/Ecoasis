@@ -1,19 +1,23 @@
 package com.nu.ecoasis
 
-import android.util.Patterns
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.firestoreSettings
 import kotlinx.coroutines.tasks.await
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.Date
 
+private fun Double.roundToDecimalPlace(decimalPlaces: Int): Double {
+    if (this.isNaN() || this.isInfinite()) {
+        return this 
+    }
+    return BigDecimal(this).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
+}
 data class PlantPreset(
     val name: String = "",
     val minPH: Double = 0.0,
@@ -30,8 +34,8 @@ class FirestoreManager {
     private val auth = FirebaseAuth.getInstance()
     // Define actual possible ranges (absolute values)
     private val sensorCollection by lazy { db.collection("ecoasis") }
-    val PH_ABS_MIN = 1
-    val PH_ABS_MAX = 14
+    val PH_ABS_MIN = 1.0
+    val PH_ABS_MAX = 14.0
     val TDS_ABS_MIN = 0
     val TDS_ABS_MAX = 1500
 
@@ -44,7 +48,7 @@ class FirestoreManager {
     }
 
     fun getRangeSettings(
-        onSuccess: (phMin: Int, phMax: Int, tdsMin: Int, tdsMax: Int) -> Unit,
+        onSuccess: (phMin: Double, phMax: Double, tdsMin: Int, tdsMax: Int) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         val docRef = db.collection("ecoasis").document("settings")
@@ -52,16 +56,14 @@ class FirestoreManager {
         docRef.get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    // Get values from Firestore and clamp to absolute ranges
-                    val phMin = clampPhValue(document.getLong("ph_min")?.toInt() ?: 1)
-                    val phMax = clampPhValue(document.getLong("ph_max")?.toInt() ?: 14)
-                    val tdsMin = clampTdsValue(document.getLong("tds_min")?.toInt() ?: 0)
-                    val tdsMax = clampTdsValue(document.getLong("tds_max")?.toInt() ?: 1500)
+                    val phMin = clampPhValue(document.getDouble("ph_min") ?: PH_ABS_MIN)
+                    val phMax = clampPhValue(document.getDouble("ph_max") ?: PH_ABS_MAX)
+                    val tdsMin = clampTdsValue(document.getLong("tds_min")?.toInt() ?: TDS_ABS_MIN)
+                    val tdsMax = clampTdsValue(document.getLong("tds_max")?.toInt() ?: TDS_ABS_MAX)
 
                     onSuccess(phMin, phMax, tdsMin, tdsMax)
                 } else {
-                    // Return default values if document doesn't exist
-                    onSuccess(1, 14, 0, 1500)
+                    onSuccess(PH_ABS_MIN, PH_ABS_MAX, TDS_ABS_MIN, TDS_ABS_MAX) // Default Doubles
                 }
             }
             .addOnFailureListener { exception ->
@@ -70,7 +72,7 @@ class FirestoreManager {
     }
 
     fun listenForRangeSettings(
-        onUpdate: (phMin: Int, phMax: Int, tdsMin: Int, tdsMax: Int) -> Unit,
+        onUpdate: (phMin: Double, phMax: Double, tdsMin: Int, tdsMax: Int) -> Unit,
         onError: (FirebaseFirestoreException) -> Unit
     ): ListenerRegistration {
         val docRef = db.collection("ecoasis").document("settings")
@@ -82,23 +84,20 @@ class FirestoreManager {
             }
 
             if (snapshot != null && snapshot.exists()) {
-                // Clamp values to absolute ranges
-                val phMin = clampPhValue(snapshot.getLong("ph_min")?.toInt() ?: 1)
-                val phMax = clampPhValue(snapshot.getLong("ph_max")?.toInt() ?: 14)
-                val tdsMin = clampTdsValue(snapshot.getLong("tds_min")?.toInt() ?: 0)
-                val tdsMax = clampTdsValue(snapshot.getLong("tds_max")?.toInt() ?: 1500)
-
+                val phMin = clampPhValue(snapshot.getDouble("ph_min") ?: PH_ABS_MIN)
+                val phMax = clampPhValue(snapshot.getDouble("ph_max") ?: PH_ABS_MAX)
+                val tdsMin = clampTdsValue(snapshot.getLong("tds_min")?.toInt() ?: TDS_ABS_MIN)
+                val tdsMax = clampTdsValue(snapshot.getLong("tds_max")?.toInt() ?: TDS_ABS_MAX)
                 onUpdate(phMin, phMax, tdsMin, tdsMax)
             } else {
-                // Use default values if document doesn't exist
-                onUpdate(1, 14, 0, 1500)
+                onUpdate(PH_ABS_MIN, PH_ABS_MAX, TDS_ABS_MIN, TDS_ABS_MAX) // Default Doubles
             }
         }
     }
 
     fun saveRangeSettings(
-        phMin: Int,
-        phMax: Int,
+        phMin: Double,
+        phMax: Double,
         tdsMin: Int,
         tdsMax: Int,
         onSuccess: () -> Unit,
@@ -107,6 +106,7 @@ class FirestoreManager {
         // Clamp values to absolute ranges before saving
         val clampedPhMin = clampPhValue(phMin)
         val clampedPhMax = clampPhValue(phMax)
+
         val clampedTdsMin = clampTdsValue(tdsMin)
         val clampedTdsMax = clampTdsValue(tdsMax)
 
@@ -139,10 +139,9 @@ class FirestoreManager {
     }
 
     // Helper functions to clamp values to absolute ranges
-    private fun clampPhValue(value: Int): Int {
+    private fun clampPhValue(value: Double): Double {
         return value.coerceIn(PH_ABS_MIN, PH_ABS_MAX)
     }
-
     private fun clampTdsValue(value: Int): Int {
         return value.coerceIn(TDS_ABS_MIN, TDS_ABS_MAX)
     }// Add this to your FirestoreManager.kt

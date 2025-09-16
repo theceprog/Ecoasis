@@ -116,14 +116,14 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
+                    <!-- Header -->
                     <LinearLayout
-
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_margin="12dp"
+                        android:layout_marginBottom="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -140,14 +140,135 @@
                             android:text="New Preset"
                             android:textFontWeight="700"
                             android:textSize="12sp" />
-
-
                     </LinearLayout>
 
+                    <!-- Plant Name -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="Plant Name"
+                        android:textColor="@color/textwhite"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/plantNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@color/bg_card_inner"
+                        android:hint="Enter plant name"
+                        android:imeOptions="actionNext"
+                        android:inputType="textCapWords"
+                        android:maxLines="1"
+                        android:padding="12dp"
+                  
+                        android:textSize="14sp" />
+
+                    <!-- pH Range -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="pH Range (0.0 - 14.0)"
+                        android:textColor="@color/textwhite"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <EditText
+                            android:id="@+id/minPHInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:background="@color/bg_card_inner"
+                            android:hint="Min pH"
+                            android:imeOptions="actionNext"
+                            android:inputType="numberDecimal"
+                            android:maxLines="1"
+                            android:padding="12dp"
+
+                            android:textSize="14sp" />
+
+                        <EditText
+                            android:id="@+id/maxPHInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@color/bg_card_inner"
+                            android:hint="Max pH"
+                            android:imeOptions="actionNext"
+                            android:inputType="numberDecimal"
+                            android:maxLines="1"
+                            android:padding="12dp"
+
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- PPM Range -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="PPM Range"
+                        android:textColor="@color/textwhite"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <EditText
+                            android:id="@+id/minPPMInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:background="@color/bg_card_inner"
+                            android:hint="Min PPM"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:maxLines="1"
+                            android:padding="12dp"
+
+                            android:textSize="14sp" />
+
+                        <EditText
+                            android:id="@+id/maxPPMInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@color/bg_card_inner"
+                            android:hint="Max PPM"
+                            android:imeOptions="actionDone"
+                            android:inputType="number"
+                            android:maxLines="1"
+                            android:padding="12dp"
+
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Add Button -->
+                    <Button
+                        android:id="@+id/addPresetButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@color/bg_card_inner"
+                        android:text="Add Preset"
+                        android:textColor="@color/textwhite"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
         </FrameLayout>
 
         <FrameLayout
