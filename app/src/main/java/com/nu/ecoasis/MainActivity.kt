@@ -1,5 +1,6 @@
 package com.nu.ecoasis
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -7,13 +8,19 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.cardview.widget.CardView
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -237,7 +244,79 @@ class SensorViewModelFactory(private val firestoreManager: FirestoreManager) :
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+class SettingsDialog(context: Context) : Dialog(context) {
 
+    private lateinit var darkModeSwitch: com.google.android.material.switchmaterial.SwitchMaterial
+    private lateinit var logoutOption: LinearLayout
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.popup_settings)
+
+        // Set dialog window properties
+        window?.setBackgroundDrawableResource(android.R.color.transparent)
+        window?.setLayout(
+            (context.resources.displayMetrics.widthPixels * 0.9).toInt(),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        initializeViews()
+        setupClickListeners()
+        loadCurrentSettings()
+    }
+
+    private fun initializeViews() {
+        darkModeSwitch = findViewById(R.id.darkModeSwitch)
+        logoutOption = findViewById(R.id.logoutOption)
+    }
+
+    private fun setupClickListeners() {
+        // Dark mode switch listener
+        darkModeSwitch.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
+            setDarkMode(isChecked)
+        }
+
+        // Logout option listener
+        logoutOption.setOnClickListener {
+            performLogout()
+            dismiss()
+        }
+    }
+
+    private fun loadCurrentSettings() {
+        // Load current dark mode setting
+        val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val isDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES
+        darkModeSwitch.isChecked = isDarkMode
+    }
+
+    private fun setDarkMode(isDarkMode: Boolean) {
+        val mode = if (isDarkMode) {
+            AppCompatDelegate.MODE_NIGHT_YES
+        } else {
+            AppCompatDelegate.MODE_NIGHT_NO
+        }
+        AppCompatDelegate.setDefaultNightMode(mode)
+
+        // Save preference (optional)
+        val sharedPref = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean("dark_mode", isDarkMode)
+            apply()
+        }
+    }
+
+    private fun performLogout() {
+        // Perform logout logic
+        val firestoreManager = FirestoreManager()
+        firestoreManager.signOut()
+
+        // Navigate to login activity
+        val intent = Intent(context, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        context.startActivity(intent)
+    }
+}
 class MainActivity : AppCompatActivity() {
     private lateinit var sensorViewModel: SensorViewModel
     private lateinit var tempval: TextView
@@ -265,7 +344,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var downPumpPercent: ImageView
     private lateinit var phStatusText: TextView
     private lateinit var ppmStatusText: TextView
-
+    private fun showSettingsPopup() {
+        val settingsDialog = SettingsDialog(this)
+        settingsDialog.show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -305,6 +387,10 @@ class MainActivity : AppCompatActivity() {
         ppmStatusText = findViewById(R.id.ppmStatusText)
 
         updateButtonStates()
+        val settingsCard = findViewById<CardView>(R.id.settingsCard)
+        settingsCard.setOnClickListener {
+            showSettingsPopup()
+        }
         val settingsButton: ImageButton = findViewById(R.id.settingbtn)
         settingsButton.setOnClickListener {
             val intent = Intent(this, Settings::class.java)
@@ -317,7 +403,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Use FirestoreManager directly instead of SensorRepository
         val firestoreManager = FirestoreManager()
         val factory = SensorViewModelFactory(firestoreManager)
         sensorViewModel = ViewModelProvider(this, factory)[SensorViewModel::class.java]
@@ -336,12 +421,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatusUI(isConnected: Boolean) {
         if (isConnected) {
-            // Online status
             dotStatus.setImageResource(R.drawable.ic_dot_green)
             textStatus.text = "Online"
             textStatus.setTextColor(ContextCompat.getColor(this, R.color.green))
         } else {
-            // Offline status
             dotStatus.setImageResource(R.drawable.ic_dot_red)
             textStatus.text = "Offline"
             textStatus.setTextColor(ContextCompat.getColor(this, R.color.red))
@@ -399,13 +482,12 @@ class MainActivity : AppCompatActivity() {
     }
     private fun updatePumpButtonState(button: View, isActive: Boolean) {
         val context = button.context
-        val activeColor = ContextCompat.getColor(context, R.color.green)
+        val activeColor = ContextCompat.getColor(context, R.color.themegreen)
         val inactiveColor = ContextCompat.getColor(context, R.color.textwhite)
 
         when (button) {
             is ImageButton -> {
-                upPumpButton.isActivated = isActive
-                downPumpButton.isActivated = isActive
+                button.isActivated = isActive
             }
 
             is TextView -> {
@@ -435,13 +517,11 @@ class MainActivity : AppCompatActivity() {
         if (isNightMode) {
             upPumpButton.setImageResource(R.drawable.ic_up_selector_dark)
             downPumpButton.setImageResource(R.drawable.ic_down_selector_dark)
-            upPumpPercent.setImageResource(R.drawable.ic_up_selector_dark)
-            downPumpPercent.setImageResource(R.drawable.ic_down_selector_dark)
+
         } else {
             upPumpButton.setImageResource(R.drawable.ic_up_selector)
             downPumpButton.setImageResource(R.drawable.ic_down_selector)
-            upPumpPercent.setImageResource(R.drawable.ic_up_selector)
-            downPumpPercent.setImageResource(R.drawable.ic_down_selector)
+
         }
     }
 

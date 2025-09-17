@@ -11,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Date
+import kotlin.text.get
 
 private fun Double.roundToDecimalPlace(decimalPlaces: Int): Double {
     if (this.isNaN() || this.isInfinite()) {
@@ -28,6 +29,13 @@ data class PlantPreset(
 ) {
     constructor() : this("", 0.0, 0.0, 0, 0)
 }
+data class CalibrationStatus(
+    val calibrated: Boolean = false,
+    val ph_v: Double = 0.0
+) {
+    constructor() : this(false, 0.0)
+}
+
 
 class FirestoreManager {
 
@@ -55,7 +63,32 @@ class FirestoreManager {
             constructor() : this(0, 0)
         }
     }
+    data class CalibrationStatus(
+        val ph_v: Double = 0.0,          // Not nested
+        val status: StatusFields = StatusFields()  // Nested
+    ) {
+        constructor() : this(0.0, StatusFields())
 
+        data class StatusFields(
+            val calibrated: Boolean = false  // Nested under status
+        ) {
+            constructor() : this(false)
+        }
+
+        // Helper method to access nested calibrated field
+        fun getCalibrated(): Boolean = this.status.calibrated
+        fun getPhVoltage(): Double = this.ph_v
+    }
+    fun getCalibrationStatusRealTime(onUpdate: (CalibrationStatus?) -> Unit) {
+        db.collection("ecoasis").document("readings").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                onUpdate(null)
+                return@addSnapshotListener
+            }
+            val calibrationStatus = snapshot?.toObject(CalibrationStatus::class.java)
+            onUpdate(calibrationStatus)
+        }
+    }
     suspend fun getStatusReading(): StatusReading? {
         return try {
             db.collection("ecoasis").document("readings").get().await()

@@ -27,6 +27,7 @@ import kotlinx.coroutines.tasks.await
 
 class CalibrateViewModel : ViewModel() {
     private val firestoreManager = FirestoreCalibrationManager()
+    private val firestoreMainManager = FirestoreManager()
     private val _calibrationValues =
         MutableStateFlow<FirestoreCalibrationManager.CalibrationValues?>(null)
     private val _requestStatus = MutableStateFlow<Map<String, Boolean>?>(null) // Added missing
@@ -34,10 +35,21 @@ class CalibrateViewModel : ViewModel() {
     val calibrationValues: StateFlow<FirestoreCalibrationManager.CalibrationValues?> =
         _calibrationValues
     val requestStatus: StateFlow<Map<String, Boolean>?> = _requestStatus // Added missing
+    private val _calibrationStatus = MutableStateFlow<FirestoreManager.CalibrationStatus?>(null)
+    val calibrationStatus: StateFlow<FirestoreManager.CalibrationStatus?> = _calibrationStatus
 
     init {
         startListening()
-        startListeningToRequests() // Added missing call
+        startListeningToRequests()
+        startListeningToCalibrationStatus()
+    }
+
+    private fun startListeningToCalibrationStatus() {
+        viewModelScope.launch {
+            firestoreMainManager.getCalibrationStatusRealTime { status ->
+                _calibrationStatus.value = status
+            }
+        }
     }
 
     fun setCalibrationRequest(phType: String, value: Boolean) {
@@ -221,6 +233,8 @@ class Calibrate : AppCompatActivity() {
     private lateinit var btnPh4: Button
     private lateinit var btnPh7: Button
     private lateinit var btnPh9: Button
+    private lateinit var phCalibratedText: TextView
+    private lateinit var phVoltageText: TextView
     private val viewModel: CalibrateViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -234,6 +248,8 @@ class Calibrate : AppCompatActivity() {
         btnPh4 = findViewById(R.id.btnph4)
         btnPh7 = findViewById(R.id.btnph7)
         btnPh9 = findViewById(R.id.btnph9)
+        phCalibratedText = findViewById(R.id.phCalibratedText)
+        phVoltageText = findViewById(R.id.phVoltageText)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -289,6 +305,11 @@ class Calibrate : AppCompatActivity() {
                 requests?.let { updateButtonStates(it) }
             }
         }
+        lifecycleScope.launch {
+            viewModel.calibrationStatus.collect { status ->
+                status?.let { updateCalibrationStatus(it) }
+            }
+        }
     }
 
     private fun updateUI(values: FirestoreCalibrationManager.CalibrationValues) {
@@ -323,6 +344,19 @@ class Calibrate : AppCompatActivity() {
         requests["ph9"]?.let { isRequested ->
             btnPh9.isEnabled = !isRequested
         }
+    }
+    private fun updateCalibrationStatus(status: FirestoreManager.CalibrationStatus) {
+        // Update pH calibrated status
+        if (status.getCalibrated()) {
+            phCalibratedText.text = "YES"
+
+        } else {
+            phCalibratedText.text = "NO"
+
+        }
+
+        // Update pH voltage
+        phVoltageText.text = String.format("%.2f", status.getPhVoltage())
     }
 
     private fun isNightModeEnabled(): Boolean {

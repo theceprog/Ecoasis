@@ -424,7 +424,7 @@
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:layout_gravity="center"
-                                    android:src="@drawable/ic_up" />
+                                    android:src="@drawable/ic_up_dark" />
                             </FrameLayout>
 
 
@@ -447,7 +447,7 @@
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:layout_gravity="center"
-                                    android:src="@drawable/ic_down" />
+                                    android:src="@drawable/ic_down_dark" />
                             </FrameLayout>
 
                             <FrameLayout
@@ -850,9 +850,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/phppm">
-
             <androidx.cardview.widget.CardView
-
+                android:id="@+id/settingsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
@@ -871,8 +870,9 @@
                     android:layout_gravity="center"
                     android:layout_margin="5dp"
                     android:gravity="center"
-                    android:orientation="horizontal">
-
+                    android:orientation="horizontal"
+                    android:clickable="true"
+                    android:focusable="true">
 
                     <ImageView
                         android:layout_width="12dp"
@@ -883,12 +883,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@+font/montserrat_font"
+                        android:fontFamily="@font/montserrat_font"
                         android:text="User Settings"
                         android:textColor="#059669"
                         android:textFontWeight="700"
                         android:textSize="12sp" />
-
 
                 </LinearLayout>
 
