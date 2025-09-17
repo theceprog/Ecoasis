@@ -420,6 +420,7 @@
 
 
                                 <ImageView
+                                    android:id="@+id/up_pump_percent"
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:layout_gravity="center"
@@ -442,6 +443,7 @@
 
 
                                 <ImageView
+                                    android:id="@+id/down_pump_percent"
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:layout_gravity="center"
@@ -659,6 +661,7 @@
                             <TableRow android:gravity="center">
 
                                 <TextView
+                                    android:id="@+id/a_pump_text"
                                     android:layout_width="50dp"
                                     android:layout_height="50dp"
                                     android:gravity="center"
@@ -667,6 +670,7 @@
                                     android:textSize="24sp" />
 
                                 <TextView
+                                    android:id="@+id/b_pump_text"
                                     android:layout_width="50dp"
                                     android:layout_height="50dp"
                                     android:gravity="center"

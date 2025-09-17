@@ -1,6 +1,7 @@
 package com.nu.ecoasis
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
@@ -41,10 +42,10 @@ data class SensorUiState(
     val b: Double = 0.0,
     val isLoading: Boolean = true,
     val error: String? = null,
-    val pumpa: Boolean = false,
-    val pumpb: Boolean = false,
-    val pumpdown: Boolean = false,
-    val pumpup: Boolean = false
+    val pumpA: Boolean = false,
+    val pumpB: Boolean = false,
+    val pumpDown: Boolean = false,
+    val pumpUp: Boolean = false
 )
 
 class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewModel() {
@@ -56,9 +57,51 @@ class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewMode
 
     init {
         loadSensorData()
+        loadPumpStatus()
         setupRealTimeUpdates()
+        setupPumpStatusRealTime()
     }
-
+    private fun loadPumpStatus() {
+        viewModelScope.launch {
+            try {
+                val statusData = firestoreManager.getPumpStatus()
+                statusData?.let {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            pumpA = it.pumpA,
+                            pumpB = it.pumpB,
+                            pumpDown = it.pumpDown,
+                            pumpUp = it.pumpUp
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error silently for pump status
+            }
+        }
+    }  private fun setupPumpStatusRealTime() {
+        firestoreManager.getPumpStatusRealTime { statusData ->
+            statusData?.let {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        pumpA = it.pumpA,
+                        pumpB = it.pumpB,
+                        pumpDown = it.pumpDown,
+                        pumpUp = it.pumpUp
+                    )
+                }
+            }
+        }
+    }    fun controlPump(pumpName: String, state: Boolean) {
+        viewModelScope.launch {
+            firestoreManager.controlPump(pumpName, state) { success, exception ->
+                if (!success) {
+                    // Handle error if needed
+                    exception?.printStackTrace()
+                }
+            }
+        }
+    }
     fun loadSensorData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -171,6 +214,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bprogress: ProgressBar
     private lateinit var dotStatus: ImageView
     private lateinit var textStatus: TextView
+    private lateinit var upPumpButton: ImageButton
+    private lateinit var downPumpButton: ImageButton
+    private lateinit var aPumpButton: TextView
+    private lateinit var bPumpButton: TextView
+
+    private lateinit var upPumpPercent: ImageView
+    private lateinit var downPumpPercent: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -184,7 +234,28 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(0, systemBars.top, 0, imeInsets.bottom)
             insets
         }
-
+        tempval = findViewById(R.id.temp_val)
+        phval = findViewById(R.id.ph_val)
+        ppmval = findViewById(R.id.ppm_val)
+        luxval = findViewById(R.id.lux_val)
+        humidval = findViewById(R.id.humid_val)
+        airval = findViewById(R.id.air_val)
+        upnum = findViewById(R.id.upnum)
+        downnum = findViewById(R.id.downnum)
+        anum = findViewById(R.id.anum)
+        bnum = findViewById(R.id.bnum)
+        aprogress = findViewById(R.id.aprogress)
+        bprogress = findViewById(R.id.bprogress)
+        upprogress = findViewById(R.id.upprogress)
+        downprogress = findViewById(R.id.downprogress)
+        dotStatus = findViewById(R.id.dot_status)
+        textStatus = findViewById(R.id.text_status)
+        upPumpButton = findViewById(R.id.up_pump)
+        downPumpButton = findViewById(R.id.down_pump)
+        upPumpPercent = findViewById(R.id.up_pump_percent)
+        downPumpPercent = findViewById(R.id.down_pump_percent)
+        aPumpButton = findViewById(R.id.a_pump_text)
+        bPumpButton = findViewById(R.id.b_pump_text)
         updateButtonStates()
         val settingsButton: ImageButton = findViewById(R.id.settingbtn)
         settingsButton.setOnClickListener {
@@ -203,23 +274,8 @@ class MainActivity : AppCompatActivity() {
         val factory = SensorViewModelFactory(firestoreManager)
         sensorViewModel = ViewModelProvider(this, factory)[SensorViewModel::class.java]
 
-        tempval = findViewById(R.id.temp_val)
-        phval = findViewById(R.id.ph_val)
-        ppmval = findViewById(R.id.ppm_val)
-        luxval = findViewById(R.id.lux_val)
-        humidval = findViewById(R.id.humid_val)
-        airval = findViewById(R.id.air_val)
-        upnum = findViewById(R.id.upnum)
-        downnum = findViewById(R.id.downnum)
-        anum = findViewById(R.id.anum)
-        bnum = findViewById(R.id.bnum)
-        aprogress = findViewById(R.id.aprogress)
-        bprogress = findViewById(R.id.bprogress)
-        upprogress = findViewById(R.id.upprogress)
-        downprogress = findViewById(R.id.downprogress)
-        dotStatus = findViewById(R.id.dot_status)
-        textStatus = findViewById(R.id.text_status)
 
+        setupPumpButtonListeners()
         setupObservers()
         setupClickListeners()
 
@@ -227,6 +283,27 @@ class MainActivity : AppCompatActivity() {
         textView3.text = getGreetingBasedOnTime()
         sensorViewModel.connectionStatus.observe(this) { isConnected ->
             updateStatusUI(isConnected)
+        }
+    }
+    private fun setupPumpButtonListeners() {
+        upPumpButton.setOnClickListener {
+            val currentState = sensorViewModel.uiState.value.pumpUp
+            sensorViewModel.controlPump("pump_up", !currentState)
+        }
+
+        downPumpButton.setOnClickListener {
+            val currentState = sensorViewModel.uiState.value.pumpDown
+            sensorViewModel.controlPump("pump_down", !currentState)
+        }
+
+        aPumpButton.setOnClickListener {
+            val currentState = sensorViewModel.uiState.value.pumpA
+            sensorViewModel.controlPump("pump_a", !currentState)
+        }
+
+        bPumpButton.setOnClickListener {
+            val currentState = sensorViewModel.uiState.value.pumpB
+            sensorViewModel.controlPump("pump_b", !currentState)
         }
     }
 
@@ -279,11 +356,35 @@ class MainActivity : AppCompatActivity() {
         downprogress.progress = uiState.down.toInt()
         aprogress.progress = uiState.a.toInt()
         bprogress.progress = uiState.b.toInt()
+        updatePumpButtonState(upPumpButton, uiState.pumpUp)
+        updatePumpButtonState(downPumpButton, uiState.pumpDown)
+        updatePumpButtonState(aPumpButton, uiState.pumpA)
+        updatePumpButtonState(bPumpButton, uiState.pumpB)
         uiState.error?.let { error ->
             showErrorDialog(error)
         }
     }
+    private fun updatePumpButtonState(button: View, isActive: Boolean) {
+        val context = button.context
+        val activeColor = ContextCompat.getColor(context, R.color.green)
+        val inactiveColor = ContextCompat.getColor(context, R.color.white)
 
+        when (button) {
+            is ImageButton -> {
+                // For ImageButtons, use tint
+                button.imageTintList = ColorStateList.valueOf(
+                    if (isActive) activeColor else inactiveColor
+                )
+            }
+            is TextView -> {
+                // For TextViews, change text color
+                button.setTextColor(if (isActive) activeColor else inactiveColor)
+            }
+        }
+
+        // Optional: Add visual feedback
+        button.isActivated = isActive
+    }
     private fun setupClickListeners() {
         // Setup any click listeners if needed
     }
@@ -301,8 +402,17 @@ class MainActivity : AppCompatActivity() {
     private fun updateButtonStates() {
         val isNightMode = isNightModeEnabled()
         findViewById<ImageButton>(R.id.settingbtn).isActivated = isNightMode
-        findViewById<ImageButton>(R.id.up_pump).isActivated = isNightMode
-        findViewById<ImageButton>(R.id.down_pump).isActivated = isNightMode
+        if (isNightMode) {
+            upPumpButton.setImageResource(R.drawable.ic_up_selector_dark)
+            downPumpButton.setImageResource(R.drawable.ic_down_selector_dark)
+            upPumpPercent.setImageResource(R.drawable.ic_up_selector_dark)
+            downPumpPercent.setImageResource(R.drawable.ic_down_selector_dark)
+        } else {
+            upPumpButton.setImageResource(R.drawable.ic_up_selector)
+            downPumpButton.setImageResource(R.drawable.ic_down_selector)
+            upPumpPercent.setImageResource(R.drawable.ic_up_selector)
+            downPumpPercent.setImageResource(R.drawable.ic_down_selector)
+        }
     }
 
     private fun isNightModeEnabled(): Boolean {

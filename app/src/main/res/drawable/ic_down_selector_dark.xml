@@ -5,6 +5,6 @@
         android:state_activated="false"/>
 
     <!-- Dark mode -->
-    <item android:drawable="@drawable/ic_down"
+    <item android:drawable="@drawable/ic_down_dark"
         android:state_activated="true"/>
 </selector>

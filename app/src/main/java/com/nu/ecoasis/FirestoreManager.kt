@@ -46,7 +46,40 @@ class FirestoreManager {
         }
         db.firestoreSettings = settings
     }
+    private val statusCollection by lazy { db.collection("status") }
+    suspend fun getPumpStatus(): StatusData? {
+        return try {
+            statusCollection.document("pump_status").get().await().toObject(StatusData::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    fun getPumpStatusRealTime(onUpdate: (StatusData?) -> Unit) {
+        statusCollection.document("pump_status").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                onUpdate(null)
+                return@addSnapshotListener
+            }
 
+            val statusData = snapshot?.toObject(StatusData::class.java)
+            onUpdate(statusData)
+        }
+    }
+    fun controlPump(pumpName: String, state: Boolean, onComplete: (Boolean, Exception?) -> Unit) {
+        val updateData = hashMapOf<String, Any>(
+            pumpName to state
+        )
+
+        statusCollection.document("pump_status")
+            .update(updateData)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onComplete(true, null)
+                } else {
+                    onComplete(false, task.exception)
+                }
+            }
+    }
     fun getRangeSettings(
         onSuccess: (phMin: Double, phMax: Double, tdsMin: Int, tdsMax: Int) -> Unit,
         onFailure: (Exception) -> Unit
@@ -399,10 +432,10 @@ class FirestoreManager {
 
     // Status data class
     data class StatusData(
-        val pumpa: Boolean = false,
-        val pumpb: Boolean = false,
-        val pumpdown: Boolean = false,
-        val pumpup: Boolean = false
+        val pumpA: Boolean = false,
+        val pumpB: Boolean = false,
+        val pumpDown: Boolean = false,
+        val pumpUp: Boolean = false
     ) {
         constructor() : this(false, false, false, false)
     }
