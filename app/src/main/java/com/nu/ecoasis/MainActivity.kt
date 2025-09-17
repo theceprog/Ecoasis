@@ -1,5 +1,6 @@
 package com.nu.ecoasis
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -29,6 +30,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+object StatusUtils {
+    fun getStatusText(status: Int): String {
+        return when (status) {
+            1 -> "LOW"
+            2 -> "IN RANGE"
+            3 -> "HIGH"
+            else -> "- - -"
+        }
+    }
+
+
+}
 data class SensorUiState(
     val air: Double = 0.0,
     val h2o: Double = 0.0,
@@ -45,7 +58,9 @@ data class SensorUiState(
     val pumpA: Boolean = false,
     val pumpB: Boolean = false,
     val pumpDown: Boolean = false,
-    val pumpUp: Boolean = false
+    val pumpUp: Boolean = false,
+    val phStatus: Int = 0,
+    val ppmStatus: Int = 0
 )
 
 class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewModel() {
@@ -58,8 +73,41 @@ class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewMode
     init {
         loadSensorData()
         loadPumpStatus()
+        loadStatusReading()
         setupRealTimeUpdates()
         setupPumpStatusRealTime()
+        setupStatusReadingRealTime()
+    }
+
+    private fun loadStatusReading() {
+        viewModelScope.launch {
+            try {
+                val statusReading = firestoreManager.getStatusReading()
+                statusReading?.let {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            phStatus = it.status.ph,
+                            ppmStatus = it.status.tds
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error silently for status reading
+            }
+        }
+    }
+
+    private fun setupStatusReadingRealTime() {
+        firestoreManager.getStatusReadingRealTime { statusReading ->
+            statusReading?.let {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        phStatus = it.status.ph,
+                        ppmStatus = it.status.tds
+                    )
+                }
+            }
+        }
     }
     private fun loadPumpStatus() {
         viewModelScope.launch {
@@ -68,10 +116,10 @@ class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewMode
                 statusData?.let {
                     _uiState.update { currentState ->
                         currentState.copy(
-                            pumpA = it.pumpA,
-                            pumpB = it.pumpB,
-                            pumpDown = it.pumpDown,
-                            pumpUp = it.pumpUp
+                            pumpA = it.pump_a,
+                            pumpB = it.pump_b,
+                            pumpUp = it.pump_ph_up,
+                            pumpDown = it.pump_ph_down
                         )
                     }
                 }
@@ -79,29 +127,23 @@ class SensorViewModel(private val firestoreManager: FirestoreManager) : ViewMode
                 // Handle error silently for pump status
             }
         }
-    }  private fun setupPumpStatusRealTime() {
+    }
+
+    private fun setupPumpStatusRealTime() {
         firestoreManager.getPumpStatusRealTime { statusData ->
             statusData?.let {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        pumpA = it.pumpA,
-                        pumpB = it.pumpB,
-                        pumpDown = it.pumpDown,
-                        pumpUp = it.pumpUp
+                        pumpA = it.pump_a,
+                        pumpB = it.pump_b,
+                        pumpUp = it.pump_ph_up,
+                        pumpDown = it.pump_ph_down
                     )
                 }
             }
         }
-    }    fun controlPump(pumpName: String, state: Boolean) {
-        viewModelScope.launch {
-            firestoreManager.controlPump(pumpName, state) { success, exception ->
-                if (!success) {
-                    // Handle error if needed
-                    exception?.printStackTrace()
-                }
-            }
-        }
     }
+
     fun loadSensorData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -221,6 +263,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var upPumpPercent: ImageView
     private lateinit var downPumpPercent: ImageView
+    private lateinit var phStatusText: TextView
+    private lateinit var ppmStatusText: TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -256,6 +301,9 @@ class MainActivity : AppCompatActivity() {
         downPumpPercent = findViewById(R.id.down_pump_percent)
         aPumpButton = findViewById(R.id.a_pump_text)
         bPumpButton = findViewById(R.id.b_pump_text)
+        phStatusText = findViewById(R.id.phStatusText)
+        ppmStatusText = findViewById(R.id.ppmStatusText)
+
         updateButtonStates()
         val settingsButton: ImageButton = findViewById(R.id.settingbtn)
         settingsButton.setOnClickListener {
@@ -275,7 +323,6 @@ class MainActivity : AppCompatActivity() {
         sensorViewModel = ViewModelProvider(this, factory)[SensorViewModel::class.java]
 
 
-        setupPumpButtonListeners()
         setupObservers()
         setupClickListeners()
 
@@ -285,27 +332,7 @@ class MainActivity : AppCompatActivity() {
             updateStatusUI(isConnected)
         }
     }
-    private fun setupPumpButtonListeners() {
-        upPumpButton.setOnClickListener {
-            val currentState = sensorViewModel.uiState.value.pumpUp
-            sensorViewModel.controlPump("pump_up", !currentState)
-        }
 
-        downPumpButton.setOnClickListener {
-            val currentState = sensorViewModel.uiState.value.pumpDown
-            sensorViewModel.controlPump("pump_down", !currentState)
-        }
-
-        aPumpButton.setOnClickListener {
-            val currentState = sensorViewModel.uiState.value.pumpA
-            sensorViewModel.controlPump("pump_a", !currentState)
-        }
-
-        bPumpButton.setOnClickListener {
-            val currentState = sensorViewModel.uiState.value.pumpB
-            sensorViewModel.controlPump("pump_b", !currentState)
-        }
-    }
 
     private fun updateStatusUI(isConnected: Boolean) {
         if (isConnected) {
@@ -356,35 +383,38 @@ class MainActivity : AppCompatActivity() {
         downprogress.progress = uiState.down.toInt()
         aprogress.progress = uiState.a.toInt()
         bprogress.progress = uiState.b.toInt()
+
         updatePumpButtonState(upPumpButton, uiState.pumpUp)
         updatePumpButtonState(downPumpButton, uiState.pumpDown)
         updatePumpButtonState(aPumpButton, uiState.pumpA)
         updatePumpButtonState(bPumpButton, uiState.pumpB)
+        updateStatusDisplay(uiState.phStatus, uiState.ppmStatus)
         uiState.error?.let { error ->
             showErrorDialog(error)
         }
     }
+    private fun updateStatusDisplay(phStatus: Int, ppmStatus: Int) {
+        phStatusText.text = StatusUtils.getStatusText(phStatus)
+        ppmStatusText.text = StatusUtils.getStatusText(ppmStatus)
+    }
     private fun updatePumpButtonState(button: View, isActive: Boolean) {
         val context = button.context
         val activeColor = ContextCompat.getColor(context, R.color.green)
-        val inactiveColor = ContextCompat.getColor(context, R.color.white)
+        val inactiveColor = ContextCompat.getColor(context, R.color.textwhite)
 
         when (button) {
             is ImageButton -> {
-                // For ImageButtons, use tint
-                button.imageTintList = ColorStateList.valueOf(
-                    if (isActive) activeColor else inactiveColor
-                )
+                upPumpButton.isActivated = isActive
+                downPumpButton.isActivated = isActive
             }
+
             is TextView -> {
                 // For TextViews, change text color
                 button.setTextColor(if (isActive) activeColor else inactiveColor)
             }
         }
-
-        // Optional: Add visual feedback
-        button.isActivated = isActive
     }
+
     private fun setupClickListeners() {
         // Setup any click listeners if needed
     }

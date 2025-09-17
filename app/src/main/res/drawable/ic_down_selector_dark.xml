@@ -2,9 +2,9 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Light mode (default) -->
     <item android:drawable="@drawable/baseline_arrow_downward_24"
-        android:state_activated="false"/>
+        android:state_activated="true"/>
 
     <!-- Dark mode -->
     <item android:drawable="@drawable/ic_down_dark"
-        android:state_activated="true"/>
+        android:state_activated="false"/>
 </selector>

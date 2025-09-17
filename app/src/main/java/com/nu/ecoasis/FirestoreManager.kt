@@ -14,10 +14,11 @@ import java.util.Date
 
 private fun Double.roundToDecimalPlace(decimalPlaces: Int): Double {
     if (this.isNaN() || this.isInfinite()) {
-        return this 
+        return this
     }
     return BigDecimal(this).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
 }
+
 data class PlantPreset(
     val name: String = "",
     val minPH: Double = 0.0,
@@ -32,6 +33,7 @@ class FirestoreManager {
 
     val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
     // Define actual possible ranges (absolute values)
     private val sensorCollection by lazy { db.collection("ecoasis") }
     val PH_ABS_MIN = 1.0
@@ -39,23 +41,43 @@ class FirestoreManager {
     val TDS_ABS_MIN = 0
     val TDS_ABS_MAX = 1500
 
-    init {
-        val settings = firestoreSettings {
-            isPersistenceEnabled = true
-            cacheSizeBytes = FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED
+    private val statusCollection by lazy { db.collection("ecoasis") }
+
+    data class StatusReading(
+        val status: StatusFields = StatusFields()
+    ) {
+        constructor() : this(StatusFields())
+
+        data class StatusFields(
+            val ph: Int = 0,
+            val tds: Int = 0
+        ) {
+            constructor() : this(0, 0)
         }
-        db.firestoreSettings = settings
     }
-    private val statusCollection by lazy { db.collection("status") }
-    suspend fun getPumpStatus(): StatusData? {
+
+    suspend fun getStatusReading(): StatusReading? {
         return try {
-            statusCollection.document("pump_status").get().await().toObject(StatusData::class.java)
+            db.collection("ecoasis").document("readings").get().await()
+                .toObject(StatusReading::class.java)
         } catch (e: Exception) {
             null
         }
     }
+
+    fun getStatusReadingRealTime(onUpdate: (StatusReading?) -> Unit) {
+        db.collection("ecoasis").document("readings").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                onUpdate(null)
+                return@addSnapshotListener
+            }
+            val statusReading = snapshot?.toObject(StatusReading::class.java)
+            onUpdate(statusReading)
+        }
+    }
+
     fun getPumpStatusRealTime(onUpdate: (StatusData?) -> Unit) {
-        statusCollection.document("pump_status").addSnapshotListener { snapshot, error ->
+        statusCollection.document("status").addSnapshotListener { snapshot, error ->
             if (error != null) {
                 onUpdate(null)
                 return@addSnapshotListener
@@ -65,21 +87,16 @@ class FirestoreManager {
             onUpdate(statusData)
         }
     }
-    fun controlPump(pumpName: String, state: Boolean, onComplete: (Boolean, Exception?) -> Unit) {
-        val updateData = hashMapOf<String, Any>(
-            pumpName to state
-        )
 
-        statusCollection.document("pump_status")
-            .update(updateData)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    onComplete(true, null)
-                } else {
-                    onComplete(false, task.exception)
-                }
-            }
+    // Update getPumpStatus method as well
+    suspend fun getPumpStatus(): StatusData? {
+        return try {
+            statusCollection.document("status").get().await().toObject(StatusData::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
+
     fun getRangeSettings(
         onSuccess: (phMin: Double, phMax: Double, tdsMin: Int, tdsMax: Int) -> Unit,
         onFailure: (Exception) -> Unit
@@ -175,6 +192,7 @@ class FirestoreManager {
     private fun clampPhValue(value: Double): Double {
         return value.coerceIn(PH_ABS_MIN, PH_ABS_MAX)
     }
+
     private fun clampTdsValue(value: Int): Int {
         return value.coerceIn(TDS_ABS_MIN, TDS_ABS_MAX)
     }// Add this to your FirestoreManager.kt
@@ -277,7 +295,10 @@ class FirestoreManager {
                                                 onFailure
                                             )
                                         } else {
-                                            onFailure(profileTask.exception ?: Exception("Profile update failed"))
+                                            onFailure(
+                                                profileTask.exception
+                                                    ?: Exception("Profile update failed")
+                                            )
                                         }
                                     }
                             } else {
@@ -415,6 +436,7 @@ class FirestoreManager {
             onUpdate(sensorData)
         }
     }
+
     data class SensorData(
         val air: Double = 0.0,
         val h2o: Double = 0.0,
@@ -432,10 +454,10 @@ class FirestoreManager {
 
     // Status data class
     data class StatusData(
-        val pumpA: Boolean = false,
-        val pumpB: Boolean = false,
-        val pumpDown: Boolean = false,
-        val pumpUp: Boolean = false
+        val pump_a: Boolean = false,
+        val pump_b: Boolean = false,
+        val pump_ph_up: Boolean = false,
+        val pump_ph_down: Boolean = false
     ) {
         constructor() : this(false, false, false, false)
     }
@@ -458,6 +480,7 @@ class FirestoreManager {
         val pattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
         return pattern.matches(email)
     }
+
     // Update in FirestoreManager.kt
     fun getAllPlants(
         onSuccess: (List<Pair<String, PlantPreset>>) -> Unit, // Returns documentId + plant data
